@@ -280,33 +280,33 @@
                 <div className="stat-icon" style={{background: '#f0f0f0', color: 'var(--kretan-primary)'}}>
                   <i className="fas fa-users"></i>
                 </div>
-                <div className="stat-value">{stats.thekretan?.customers || 0}</div>
+                <div className="stat-value">{(stats.thekretan||{}).customers || 0}</div>
                 <div className="stat-label">Customers</div>
               </div>
               <div className="stat-card">
                 <div className="stat-icon" style={{background: '#f0f0f0', color: 'var(--kretan-primary)'}}>
                   <i className="fas fa-euro-sign"></i>
                 </div>
-                <div className="stat-value">€{(stats.thekretan?.revenue_total || 0).toFixed(0)}</div>
+                <div className="stat-value">€{((stats.thekretan||{}).revenue_total || 0).toFixed(0)}</div>
                 <div className="stat-label">Total Revenue</div>
               </div>
               <div className="stat-card">
                 <div className="stat-icon" style={{background: '#f0f0f0', color: 'var(--kretan-primary)'}}>
                   <i className="fas fa-euro-sign"></i>
                 </div>
-                <div className="stat-value">€{(stats.thekretan?.revenue_month || 0).toFixed(0)}</div>
+                <div className="stat-value">€{((stats.thekretan||{}).revenue_month || 0).toFixed(0)}</div>
                 <div className="stat-label">This Month</div>
               </div>
               <div className="stat-card">
                 <div className="stat-icon" style={{background: '#f0f0f0', color: 'var(--kretan-primary)'}}>
                   <i className="fas fa-star"></i>
                 </div>
-                <div className="stat-value">{stats.thekretan?.active_points || 0}</div>
+                <div className="stat-value">{(stats.thekretan||{}).active_points || 0}</div>
                 <div className="stat-label">Active Points</div>
               </div>
             </div>
 
-            {stats.thekretan?.top_customers && stats.thekretan.top_customers.length > 0 && (
+            {(stats.thekretan||{}).top_customers && stats.thekretan.top_customers.length > 0 && (
               <div className="card">
                 <div className="card-header">
                   <h3>Top Customers</h3>
@@ -346,33 +346,33 @@
                 <div className="stat-icon" style={{background: '#f0f0f0', color: 'var(--panic-primary)'}}>
                   <i className="fas fa-building"></i>
                 </div>
-                <div className="stat-value">{stats.panicsweets?.companies || 0}</div>
+                <div className="stat-value">{(stats.panicsweets||{}).companies || 0}</div>
                 <div className="stat-label">Companies</div>
               </div>
               <div className="stat-card">
                 <div className="stat-icon" style={{background: '#f0f0f0', color: 'var(--panic-primary)'}}>
                   <i className="fas fa-euro-sign"></i>
                 </div>
-                <div className="stat-value">€{(stats.panicsweets?.revenue_total || 0).toFixed(0)}</div>
+                <div className="stat-value">€{((stats.panicsweets||{}).revenue_total || 0).toFixed(0)}</div>
                 <div className="stat-label">Total Revenue</div>
               </div>
               <div className="stat-card">
                 <div className="stat-icon" style={{background: '#f0f0f0', color: 'var(--panic-primary)'}}>
                   <i className="fas fa-euro-sign"></i>
                 </div>
-                <div className="stat-value">€{(stats.panicsweets?.revenue_month || 0).toFixed(0)}</div>
+                <div className="stat-value">€{((stats.panicsweets||{}).revenue_month || 0).toFixed(0)}</div>
                 <div className="stat-label">This Month</div>
               </div>
               <div className="stat-card">
                 <div className="stat-icon" style={{background: '#f0f0f0', color: 'var(--panic-primary)'}}>
                   <i className="fas fa-hourglass"></i>
                 </div>
-                <div className="stat-value">{stats.panicsweets?.pending_orders || 0}</div>
+                <div className="stat-value">{(stats.panicsweets||{}).pending_orders || 0}</div>
                 <div className="stat-label">Pending Orders</div>
               </div>
             </div>
 
-            {stats.panicsweets?.top_companies && stats.panicsweets.top_companies.length > 0 && (
+            {(stats.panicsweets||{}).top_companies && stats.panicsweets.top_companies.length > 0 && (
               <div className="card">
                 <div className="card-header">
                   <h3>Top Companies</h3>
@@ -877,7 +877,7 @@
                 <textarea value={JSON.stringify(newPurchase.items, null, 2)} onChange={e => {
                   try {
                     setNewPurchase({...newPurchase, items: JSON.parse(e.target.value)});
-                  } catch {}
+                  } catch(e) {}
                 }} rows="6" placeholder='[{"name":"item1","qty":1,"price":10}]'></textarea>
               </div>
             </Modal>
@@ -1482,7 +1482,7 @@
                 <textarea value={JSON.stringify(newOrder.items, null, 2)} onChange={e => {
                   try {
                     setNewOrder({...newOrder, items: JSON.parse(e.target.value)});
-                  } catch {}
+                  } catch(e) {}
                 }} rows="6" placeholder='[{"name":"product","qty":10,"price":5}]'></textarea>
               </div>
               <div className="form-group">
@@ -1685,13 +1685,13 @@
             {!editing ? (
               <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20}}>
                 <div>
-                  <strong>Points per Euro:</strong> {settings?.points_per_euro || 1}<br/>
-                  <strong>Redemption Rate:</strong> €{settings?.redemption_rate || 0.01} per point<br/>
-                  <strong>Welcome Bonus:</strong> {settings?.welcome_bonus || 0} points
+                  <strong>Points per Euro:</strong> {(settings||{}).points_per_euro || 1}<br/>
+                  <strong>Redemption Rate:</strong> €{(settings||{}).redemption_rate || 0.01} per point<br/>
+                  <strong>Welcome Bonus:</strong> {(settings||{}).welcome_bonus || 0} points
                 </div>
                 <div>
-                  <strong>Birthday Bonus:</strong> {settings?.birthday_bonus || 0} points<br/>
-                  <strong>Min Points to Redeem:</strong> {settings?.min_redeem_points || 50} points
+                  <strong>Birthday Bonus:</strong> {(settings||{}).birthday_bonus || 0} points<br/>
+                  <strong>Min Points to Redeem:</strong> {(settings||{}).min_redeem_points || 50} points
                 </div>
               </div>
             ) : (
