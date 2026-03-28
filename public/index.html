@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM - The Kretan & Panic Sweets</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --kretan-primary: #8B4513; --kretan-light: #D2B48C;
+      --panic-primary: #E91E63; --panic-light: #FCE4EC;
+      --bg: #f5f5f5; --card: #fff; --text: #333; --text-light: #777;
+      --border: #e0e0e0; --success: #4caf50; --warning: #ff9800; --danger: #f44336;
+      --sidebar-width: 260px;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); }
+
+    /* Layout */
+    .app { display: flex; min-height: 100vh; }
+    .sidebar { width: var(--sidebar-width); background: #1a1a2e; color: #fff; position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto; z-index: 100; transition: transform 0.3s; }
+    .sidebar.collapsed { transform: translateX(-100%); }
+    .main { margin-left: var(--sidebar-width); flex: 1; min-height: 100vh; }
+    .topbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+    .content { padding: 24px; }
+
+    /* Sidebar styles */
+    .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; }
+    .sidebar-header h2 { font-size: 18px; margin-bottom: 4px; }
+    .sidebar-header small { color: rgba(255,255,255,0.5); font-size: 12px; }
+    .nav-section { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .nav-section-title { padding: 4px 20px; font-size: 10px; text-transform: uppercase; color: rgba(255,255,255,0.3); letter-spacing: 1px; }
+    .nav-item { display: flex; align-items: center; padding: 10px 20px; cursor: pointer; transition: all 0.2s; color: rgba(255,255,255,0.7); font-size: 14px; gap: 12px; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    .nav-item.active { background: rgba(255,255,255,0.1); color: #fff; border-left: 3px solid #E91E63; }
+    .nav-item i { width: 20px; text-align: center; }
+    .nav-item .badge { background: var(--panic-primary); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: auto; }
+
+    /* Cards & Tables */
+    .card { background: var(--card); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding: 20px; margin-bottom: 16px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .card-header h3 { font-size: 16px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .stat-card .stat-value { font-size: 28px; font-weight: 700; color: var(--text); }
+    .stat-card .stat-label { font-size: 12px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+    .stat-card .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 12px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead th { text-align: left; padding: 10px 12px; font-size: 12px; text-transform: uppercase; color: var(--text-light); border-bottom: 2px solid var(--border); font-weight: 600; }
+    tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    tbody tr:hover { background: #f9f9f9; }
+    tbody tr { cursor: pointer; }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+    .btn-primary { background: #1a1a2e; color: #fff; }
+    .btn-primary:hover { background: #2a2a4e; }
+    .btn-kretan { background: var(--kretan-primary); color: #fff; }
+    .btn-panic { background: var(--panic-primary); color: #fff; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: #f5f5f5; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-group { display: flex; gap: 8px; }
+
+    /* Forms */
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; color: var(--text); }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px;
+      font-size: 14px; font-family: inherit; transition: border-color 0.2s; background: #fff;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #1a1a2e; outline: none; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .checkbox-group { display: flex; align-items: center; gap: 8px; }
+    .checkbox-group input[type="checkbox"] { width: auto; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+    .modal { background: #fff; border-radius: 16px; width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto; }
+    .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { font-size: 18px; }
+    .modal-body { padding: 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+    .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-light); }
+
+    /* Tags & Badges */
+    .tag { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+    .tag-success { background: #e8f5e9; color: #2e7d32; }
+    .tag-warning { background: #fff3e0; color: #e65100; }
+    .tag-danger { background: #ffebee; color: #c62828; }
+    .tag-info { background: #e3f2fd; color: #1565c0; }
+    .tag-purple { background: #f3e5f5; color: #7b1fa2; }
+
+    /* Search */
+    .search-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+    .search-bar input { flex: 1; }
+
+    /* Login page */
+    .login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #1a1a2e, #16213e); }
+    .login-card { background: #fff; padding: 40px; border-radius: 16px; width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .login-card h1 { text-align: center; margin-bottom: 8px; font-size: 24px; }
+    .login-card p { text-align: center; color: var(--text-light); margin-bottom: 24px; font-size: 14px; }
+    .login-card .btn { width: 100%; justify-content: center; padding: 12px; font-size: 15px; }
+    .login-error { background: #ffebee; color: #c62828; padding: 10px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; text-align: center; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+    .tab { padding: 10px 20px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--text-light); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+    .tab.active { color: var(--text); border-bottom-color: #1a1a2e; }
+    .tab:hover { color: var(--text); }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-light); }
+    .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+    .empty-state h4 { margin-bottom: 8px; color: var(--text); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .form-row, .form-row-3 { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 24px; right: 24px; background: #333; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 14px; z-index: 2000; animation: slideIn 0.3s ease; }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+    @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .points-display { display: inline-flex; align-items: center; gap: 4px; background: #fff8e1; color: #f57f17; padding: 2px 8px; border-radius: 12px; font-size: 13px; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useRef, createContext, useContext } = React;
+
+    // ============ CONTEXT & AUTH ============
+    const AuthContext = createContext(null);
+
+    function useAuth() { return useContext(AuthContext); }
+
+    function api(path, options = {}) {
+      const token = localStorage.getItem('crm_token');
+      return fetch(`/api${path}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          ...options.headers,
+        },
+        body: options.body ? JSON.stringify(options.body) : undefined,
+      }).then(async r => {
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Request failed');
+        return data;
+      });
+    }
+
+    // ============ TOAST ============
+    function Toast({ message, type, onClose }) {
+      useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t); }, []);
+      return <div className={`toast ${type}`}>{message}</div>;
+    }
+
+    let _showToast = () => {};
+    function ToastProvider({ children }) {
+      const [toast, setToast] = useState(null);
+      _showToast = (message, type = 'success') => setToast({ message, type });
+      return <>{children}{toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}</>;
+    }
+    function showToast(msg, type) { _showToast(msg, type); }
+
+    // ============ MODAL ============
+    function Modal({ title, children, onClose, footer, wide }) {
+      return (
+        <div className="modal-overlay" onClick={onClose}>
+          <div className={`modal`} style={wide ? {maxWidth:'900px'} : {}} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{title}</h3>
+              <button className="close-btn" onClick={onClose}><i className="fas fa-times"></i></button>
+            </div>
+            <div className="modal-body">{children}</div>
+            {footer && <div className="modal-footer">{footer}</div>}
+          </div>
+        </div>
+      );
+    }
+
+    // ============ LOGIN ============
+    function LoginPage({ onLogin }) {
+      const [username, setUsername] = useState('');
+      const [password, setPassword] = useState('');
+      const [error, setError] = useState('');
+      const [loading, setLoading] = useState(false);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true); setError('');
+        try {
+          const data = await api('/auth/login', { method: 'POST', body: { username, password } });
+          localStorage.setItem('crm_token', data.token);
+          onLogin(data.user);
+        } catch (err) { setError(err.message); }
+        setLoading(false);
+      };
+
+      return (
+        <div className="login-page">
+          <div className="login-card">
+            <h1>CRM System</h1>
+            <p>The Kretan & Panic Sweets</p>
+            {error && <div className="login-error">{error}</div>}
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>Username</label>
+                <input value={username} onChange={e => setUsername(e.target.value)} placeholder="Enter username" autoFocus />
+              </div>
+              <div className="form-group">
+                <label>Password</label>
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter password" />
+              </div>
+              <button className="btn btn-primary" type="submit" disabled={loading}>
+                {loading ? 'Signing in...' : 'Sign In'}
+              </button>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // ============ DASHBOARD ============
+    function Dashboard() {
+      const [stats, setStats] = useState(null);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        api('/dashboard/stats').then(setStats).catch(console.error).finally(() => setLoading(false));
+      }, []);
+
+      if (loading) return <div className="content"><p>Loading dashboard...</p></div>;
+      if (!stats) return <div className="content"><p>Failed to load dashboard.</p></div>;
+
+      const k = stats.thekretan;
+      const p = stats.panicsweets;
+
+      return (
+        <div className="content">
+          <h2 style={{marginBottom: 20}}>Dashboard</h2>
+
+          <h3 style={{marginBottom: 12, color: 'var(--kretan-primary)'}}>
+            <i className="fas fa-store" style={{marginRight: 8}}></i>The Kretan
+          </h3>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-icon" style={{background: '#e8f5e9', color: '#2e7d32'}}><i className="fas fa-users"></i></div>
+              <div className="stat-value">{k.customers}</div>
+              <div className="stat-label">Active Customers</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon" style={{background: '#e3f2fd', color: '#1565c0'}}><i className="fas fa-euro-sign"></i></div>
+              <div className="stat-value">{k.revenue_total.toFixed(0)}</div>
+              <div className="stat-label">Total Revenue</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon" style={{background: '#fff3e0', color: '#e65100'}}><i className="fas fa-chart-line"></i></div>
+              <div className="stat-value">{k.revenue_month.toFixed(0)}</div>
+              <div className="stat-label">This Month</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon" style={{background: '#fff8e1', color: '#f57f17'}}><i className="fas fa-star"></i></div>
+              <div className="stat-value">{k.active_points}</div>
+              <div className="stat-label">Active Points</div>
+            </div>
+          </div>
+
+          {k.top_customers && k.top_customers.length > 0 && (
+            <div className="card">
+              <div className="card-header"><h3>Top Customers</h3></div>
+              <table>
+                <thead><tr><th>Customer</th><th>Total Spent</th><th>Points</th><th>Visits</th></tr></thead>
+                <tbody>
+                  {k.top_customers.map(c => (
+                    <tr key={c.id}>
+                      <td>{c.first_name} {c.last_name}</td>
+                      <td style={{fontWeight:600}}>&euro;{c.total_spent.toFixed(2)}</td>
+                      <td><span className="points-display"><i className="fas fa-star"></i> {c.loyalty_points}</span></td>
+                      <td>{c.visit_count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <h3 style={{marginBottom: 12, marginTop: 24, color: 'var(--panic-primary)'}}>
+            <i className="fas fa-cookie-bite" style={{marginRight: 8}}></i>Panic Sweets
+          </h3>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-icon" style={{background: '#fce4ec', color: '#c62828'}}><i className="fas fa-building"></i></div>
+              <div className="stat-value">{p.contacts || p.companies}</div>
+              <div className="stat-label">Active Contacts</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon" style={{background: '#e3f2fd', color: '#1565c0'}}><i className="fas fa-euro-sign"></i></div>
+              <div className="stat-value">{p.revenue_total.toFixed(0)}</div>
+              <div className="stat-label">Total Revenue</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon" style={{background: '#fff3e0', color: '#e65100'}}><i className="fas fa-chart-line"></i></div>
+              <div className="stat-value">{p.revenue_month.toFixed(0)}</div>
+              <div className="stat-label">This Month</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon" style={{background: '#f3e5f5', color: '#7b1fa2'}}><i className="fas fa-clock"></i></div>
+              <div className="stat-value">{p.pending_orders}</div>
+              <div className="stat-label">Pending Orders</div>
+            </div>
+          </div>
+
+          {p.top_contacts && p.top_contacts.length > 0 && (
+            <div className="card">
+              <div className="card-header"><h3>Top Contacts</h3></div>
+              <table>
+                <thead><tr><th>Contact</th><th>Orders</th><th>Revenue</th></tr></thead>
+                <tbody>
+                  {p.top_contacts.map(c => (
+                    <tr key={c.id}>
+                      <td>{c.company_name || `${c.first_name} ${c.last_name}`}</td>
+                      <td>{c.total_orders}</td>
+                      <td style={{fontWeight:600}}>&euro;{c.total_revenue.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div className="stats-grid" style={{marginTop: 24}}>
+            <div className="stat-card">
+              <div className="stat-icon" style={{background: '#e8f5e9', color: '#2e7d32'}}><i className="fas fa-paper-plane"></i></div>
+              <div className="stat-value">{stats.promotions.sent}</div>
+              <div className="stat-label">Promotions Sent</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon" style={{background: '#fff3e0', color: '#e65100'}}><i className="fas fa-edit"></i></div>
+              <div className="stat-value">{stats.promotions.drafts}</div>
+              <div className="stat-label">Draft Promotions</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ============ CONTACTS ============
+    const EMPTY_CONTACT_FORM = {
+      contact_type: 'individual',
+      business: 'thekretan',
+      first_name: '', last_name: '',
+      company_name: '', contact_person: '', contact_title: '', tax_id: '', business_type: '', payment_terms: 'on_delivery', discount_percent: 0,
+      email: '', phone: '', mobile: '', address: '', city: '', postal_code: '',
+      date_of_birth: '', name_day: '', marital_status: '', spouse_name: '', children_count: 0, children_names: '', children_birthdays: '',
+      notes: '', tags: '', preferred_contact: 'email', consent_email: false, consent_sms: false
+    };
+
+    function Contacts() {
+      const [contacts, setContacts] = useState([]);
+      const [total, setTotal] = useState(0);
+      const [search, setSearch] = useState('');
+      const [businessFilter, setBusinessFilter] = useState('');
+      const [typeFilter, setTypeFilter] = useState('');
+      const [page, setPage] = useState(1);
+      const [showModal, setShowModal] = useState(false);
+      const [editing, setEditing] = useState(null);
+      const [detail, setDetail] = useState(null);
+      const [expandedPurchase, setExpandedPurchase] = useState(null);
+      const [expandedOrder, setExpandedOrder] = useState(null);
+
+      const parseItems = (items) => {
+        if (!items) return [];
+        if (Array.isArray(items)) return items;
+        try { return JSON.parse(items); } catch(e) { return [{ name: items, qty: 1, price: 0 }]; }
+      };
+
+      const loadRef = useRef(null);
+      loadRef.current = { search, page, businessFilter, typeFilter };
+
+      const load = useCallback(() => {
+        const { search, page, businessFilter, typeFilter } = loadRef.current;
+        let url = `/contacts?search=${search}&page=${page}&limit=25`;
+        if (businessFilter) url += `&business=${businessFilter}`;
+        if (typeFilter) url += `&contact_type=${typeFilter}`;
+        api(url).then(d => {
+          setContacts(d.contacts); setTotal(d.total);
+        }).catch(e => showToast(e.message, 'error'));
+      }, []);
+
+      useEffect(() => { load(); }, [search, page, businessFilter, typeFilter]);
+
+      const [form, setForm] = useState({...EMPTY_CONTACT_FORM});
+      const set = useCallback((k, v) => setForm(p => ({...p, [k]: v})), []);
+
+      const openNew = () => { setForm({...EMPTY_CONTACT_FORM}); setEditing(null); setShowModal(true); };
+      const openEdit = (c) => { setForm({...EMPTY_CONTACT_FORM, ...c, consent_email: !!c.consent_email, consent_sms: !!c.consent_sms}); setEditing(c.id); setShowModal(true); };
+
+      const save = async () => {
+        try {
+          if (editing) {
+            await api(`/contacts/${editing}`, { method: 'PUT', body: form });
+            showToast('Contact updated');
+          } else {
+            await api('/contacts', { method: 'POST', body: form });
+            showToast('Contact created');
+          }
+          setShowModal(false); load();
+        } catch (e) { showToast(e.message, 'error'); }
+      };
+
+      const openDetail = async (id) => {
+        try {
+          const d = await api(`/contacts/${id}`);
+          setDetail(d);
+          setExpandedPurchase(null);
+          setExpandedOrder(null);
+        } catch (e) { showToast(e.message, 'error'); }
+      };
+
+      const deleteContact = async (id) => {
+        if (!confirm('Delete this contact?')) return;
+        try { await api(`/contacts/${id}`, { method: 'DELETE' }); showToast('Contact deleted'); load(); setDetail(null); } catch(e) { showToast(e.message, 'error'); }
+      };
+
+      const getDisplayName = (c) => {
+        if (c.contact_type === 'company') return c.company_name;
+        return `${c.first_name} ${c.last_name}`;
+      };
+
+      const getBusinessTag = (business) => {
+        if (business === 'thekretan') return <span className="tag tag-warning">The Kretan</span>;
+        if (business === 'panicsweets') return <span className="tag tag-danger">Panic Sweets</span>;
+        return <span className="tag tag-info">Both</span>;
+      };
+
+      const getTypeTag = (type) => {
+        if (type === 'individual') return <span className="tag tag-success">Individual</span>;
+        if (type === 'company') return <span className="tag tag-purple">Company</span>;
+        return <span className="tag tag-info">Both</span>;
+      };
+
+      return (
+        <div className="content">
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20}}>
+            <h2><i className="fas fa-address-book" style={{color:'#1a1a2e', marginRight:8}}></i>Contacts</h2>
+            <div className="btn-group">
+              <button className="btn btn-primary" onClick={openNew}><i className="fas fa-plus"></i> Add Contact</button>
+            </div>
+          </div>
+
+          <div className="tabs">
+            <div className={`tab ${businessFilter===''?'active':''}`} onClick={()=>{setBusinessFilter(''); setPage(1);}}>All</div>
+            <div className={`tab ${businessFilter==='thekretan'?'active':''}`} onClick={()=>{setBusinessFilter('thekretan'); setPage(1);}}>The Kretan</div>
+            <div className={`tab ${businessFilter==='panicsweets'?'active':''}`} onClick={()=>{setBusinessFilter('panicsweets'); setPage(1);}}>Panic Sweets</div>
+            <div className={`tab ${businessFilter==='both'?'active':''}`} onClick={()=>{setBusinessFilter('both'); setPage(1);}}>Both</div>
+          </div>
+
+          <div className="search-bar">
+            <input placeholder="Search contacts..." value={search} onChange={e => {setSearch(e.target.value); setPage(1);}} />
+            <select value={typeFilter} onChange={e => {setTypeFilter(e.target.value); setPage(1);}}>
+              <option value="">All Types</option>
+              <option value="individual">Individuals</option>
+              <option value="company">Companies</option>
+            </select>
+            <span style={{padding:'8px 12px', color:'var(--text-light)', fontSize:13}}>{total} total</span>
+          </div>
+
+          <div className="card" style={{padding:0, overflow:'hidden'}}>
+            <table>
+              <thead><tr><th>Name</th><th>Type</th><th>Business</th><th>Email</th><th>Phone</th>{!businessFilter || businessFilter === 'thekretan' || businessFilter === 'both' ? <th>Points</th> : null}{!businessFilter || businessFilter === 'panicsweets' || businessFilter === 'both' ? <th>Revenue</th> : null}</tr></thead>
+              <tbody>
+                {contacts.map(c => (
+                  <tr key={c.id} onClick={() => openDetail(c.id)}>
+                    <td style={{fontWeight:500}}>{getDisplayName(c)}</td>
+                    <td>{getTypeTag(c.contact_type)}</td>
+                    <td>{getBusinessTag(c.business)}</td>
+                    <td>{c.email || '-'}</td>
+                    <td>{c.mobile || c.phone || '-'}</td>
+                    {!businessFilter || businessFilter === 'thekretan' || businessFilter === 'both' ? <td><span className="points-display"><i className="fas fa-star"></i> {c.loyalty_points || 0}</span></td> : null}
+                    {!businessFilter || businessFilter === 'panicsweets' || businessFilter === 'both' ? <td>&euro;{(c.total_revenue||0).toFixed(2)}</td> : null}
+                  </tr>
+                ))}
+                {contacts.length === 0 && <tr><td colSpan="7" style={{textAlign:'center', padding:40, color:'var(--text-light)'}}>No contacts found</td></tr>}
+              </tbody>
+            </table>
+          </div>
+
+          {total > 25 && (
+            <div style={{display:'flex', justifyContent:'center', gap:8, marginTop:16}}>
+              <button className="btn btn-outline btn-sm" disabled={page<=1} onClick={() => setPage(p=>p-1)}>Previous</button>
+              <span style={{padding:'5px 12px', fontSize:13}}>Page {page} of {Math.ceil(total/25)}</span>
+              <button className="btn btn-outline btn-sm" disabled={page>=Math.ceil(total/25)} onClick={() => setPage(p=>p+1)}>Next</button>
+            </div>
+          )}
+
+          {/* Detail Modal */}
+          {detail && (
+            <Modal title={getDisplayName(detail.contact)} onClose={() => setDetail(null)} wide
+              footer={<>
+                <button className="btn btn-outline" onClick={() => {openEdit(detail.contact); setDetail(null);}}>
+                  <i className="fas fa-edit"></i> Edit
+                </button>
+                <button className="btn btn-danger btn-sm" onClick={() => deleteContact(detail.contact.id)}>
+                  <i className="fas fa-trash"></i> Delete
+                </button>
+              </>}>
+              <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:20}}>
+                <div>
+                  <strong>Email:</strong> {detail.contact.email || '-'}<br/>
+                  <strong>Phone:</strong> {detail.contact.phone || '-'}<br/>
+                  <strong>Mobile:</strong> {detail.contact.mobile || '-'}<br/>
+                  <strong>Address:</strong> {detail.contact.address || '-'}, {detail.contact.city || ''} {detail.contact.postal_code || ''}
+                </div>
+                <div>
+                  {detail.contact.contact_type === 'individual' || detail.contact.contact_type === 'both' ? <>
+                    <strong>Birthday:</strong> {detail.contact.date_of_birth || '-'}<br/>
+                    <strong>Name Day:</strong> {detail.contact.name_day || '-'}<br/>
+                    <strong>Marital Status:</strong> {detail.contact.marital_status || '-'}<br/>
+                    <strong>Spouse:</strong> {detail.contact.spouse_name || '-'}<br/>
+                    <strong>Children:</strong> {detail.contact.children_count || 0} {detail.contact.children_names ? `(${detail.contact.children_names})` : ''}
+                  </> : <>
+                    <strong>Company:</strong> {detail.contact.company_name || '-'}<br/>
+                    <strong>Contact Person:</strong> {detail.contact.contact_person || '-'}<br/>
+                    <strong>Title:</strong> {detail.contact.contact_title || '-'}<br/>
+                    <strong>Tax ID:</strong> {detail.contact.tax_id || '-'}<br/>
+                    <strong>Business Type:</strong> {detail.contact.business_type || '-'}
+                  </>}
+                </div>
+              </div>
+
+              {(detail.contact.business === 'thekretan' || detail.contact.business === 'both') && (
+                <>
+                  <div className="stats-grid" style={{gridTemplateColumns:'1fr 1fr 1fr'}}>
+                    <div className="stat-card" style={{textAlign:'center'}}>
+                      <div className="stat-value" style={{color:'var(--kretan-primary)'}}><i className="fas fa-star"></i> {detail.contact.loyalty_points || 0}</div>
+                      <div className="stat-label">Points</div>
+                    </div>
+                    <div className="stat-card" style={{textAlign:'center'}}>
+                      <div className="stat-value">&euro;{(detail.contact.total_spent||0).toFixed(2)}</div>
+                      <div className="stat-label">Total Spent</div>
+                    </div>
+                    <div className="stat-card" style={{textAlign:'center'}}>
+                      <div className="stat-value">{detail.contact.visit_count || 0}</div>
+                      <div className="stat-label">Visits</div>
+                    </div>
+                  </div>
+                  {detail.purchases && detail.purchases.length > 0 && <>
+                    <h4 style={{marginTop:16, marginBottom:8}}>Recent Purchases <small style={{color:'var(--text-light)', fontWeight:400}}>(click to see items)</small></h4>
+                    <table>
+                      <thead><tr><th>Date</th><th>Amount</th><th>Points</th><th>Payment</th></tr></thead>
+                      <tbody>{detail.purchases.map(p => (
+                        <React.Fragment key={p.id}>
+                          <tr onClick={() => setExpandedPurchase(expandedPurchase === p.id ? null : p.id)} style={{cursor:'pointer', background: expandedPurchase === p.id ? '#f0f7ff' : ''}}>
+                            <td><i className={`fas fa-chevron-${expandedPurchase === p.id ? 'down' : 'right'}`} style={{marginRight:6, fontSize:10, color:'var(--text-light)'}}></i>{new Date(p.purchase_date).toLocaleDateString()}</td>
+                            <td>&euro;{p.total_amount.toFixed(2)}</td>
+                            <td>+{p.points_earned}</td>
+                            <td><span className="tag tag-info">{p.payment_method}</span></td>
+                          </tr>
+                          {expandedPurchase === p.id && (
+                            <tr><td colSpan="4" style={{padding:0, background:'#f8f9fa'}}>
+                              <div style={{padding:'12px 20px'}}>
+                                <strong style={{fontSize:12, color:'var(--text-light)'}}>Items:</strong>
+                                <table style={{marginTop:6}}>
+                                  <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead>
+                                  <tbody>
+                                    {parseItems(p.items).map((item, i) => (
+                                      <tr key={i} style={{cursor:'default'}}>
+                                        <td>{item.name || item.product || '-'}</td>
+                                        <td>{item.qty || 1}</td>
+                                        <td>&euro;{(item.price||0).toFixed(2)}</td>
+                                        <td>&euro;{((item.qty||1) * (item.price||0)).toFixed(2)}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                                {p.notes && <div style={{marginTop:8, fontSize:13, color:'var(--text-light)'}}><strong>Notes:</strong> {p.notes}</div>}
+                              </div>
+                            </td></tr>
+                          )}
+                        </React.Fragment>
+                      ))}</tbody>
+                    </table>
+                  </>}
+                  {detail.rewards && detail.rewards.length > 0 && <>
+                    <h4 style={{marginTop:16, marginBottom:8}}>Rewards History</h4>
+                    <table>
+                      <thead><tr><th>Date</th><th>Type</th><th>Points</th><th>Description</th></tr></thead>
+                      <tbody>{detail.rewards.map(r => (
+                        <tr key={r.id}>
+                          <td>{new Date(r.created_at).toLocaleDateString()}</td>
+                          <td><span className={`tag ${r.type==='earned'?'tag-success':'tag-warning'}`}>{r.type}</span></td>
+                          <td style={{fontWeight:600, color: r.points>0?'var(--success)':'var(--danger)'}}>{r.points>0?'+':''}{r.points}</td>
+                          <td>{r.description}</td>
+                        </tr>
+                      ))}</tbody>
+                    </table>
+                  </>}
+                </>
+              )}
+
+              {(detail.contact.business === 'panicsweets' || detail.contact.business === 'both') && (
+                <>
+                  <div className="stats-grid" style={{gridTemplateColumns:'1fr 1fr'}}>
+                    <div className="stat-card" style={{textAlign:'center'}}>
+                      <div className="stat-value">{detail.contact.total_orders || 0}</div>
+                      <div className="stat-label">Total Orders</div>
+                    </div>
+                    <div className="stat-card" style={{textAlign:'center'}}>
+                      <div className="stat-value">&euro;{(detail.contact.total_revenue||0).toFixed(2)}</div>
+                      <div className="stat-label">Total Revenue</div>
+                    </div>
+                  </div>
+                  {detail.orders && detail.orders.length > 0 && <>
+                    <h4 style={{marginTop:16, marginBottom:8}}>Recent Orders <small style={{color:'var(--text-light)', fontWeight:400}}>(click to see items)</small></h4>
+                    <table>
+                      <thead><tr><th>Date</th><th>Amount</th><th>Status</th><th>Payment</th></tr></thead>
+                      <tbody>{detail.orders.map(o => (
+                        <React.Fragment key={o.id}>
+                          <tr onClick={() => setExpandedOrder(expandedOrder === o.id ? null : o.id)} style={{cursor:'pointer', background: expandedOrder === o.id ? '#f0f7ff' : ''}}>
+                            <td><i className={`fas fa-chevron-${expandedOrder === o.id ? 'down' : 'right'}`} style={{marginRight:6, fontSize:10, color:'var(--text-light)'}}></i>{new Date(o.order_date).toLocaleDateString()}</td>
+                            <td>&euro;{o.total_amount.toFixed(2)}</td>
+                            <td><span className={`tag ${o.status==='delivered'?'tag-success':o.status==='cancelled'?'tag-danger':'tag-warning'}`}>{o.status}</span></td>
+                            <td><span className={`tag ${o.payment_status==='paid'?'tag-success':'tag-warning'}`}>{o.payment_status}</span></td>
+                          </tr>
+                          {expandedOrder === o.id && (
+                            <tr><td colSpan="4" style={{padding:0, background:'#f8f9fa'}}>
+                              <div style={{padding:'12px 20px'}}>
+                                <strong style={{fontSize:12, color:'var(--text-light)'}}>Items:</strong>
+                                <table style={{marginTop:6}}>
+                                  <thead><tr><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead>
+                                  <tbody>
+                                    {parseItems(o.items).map((item, i) => (
+                                      <tr key={i} style={{cursor:'default'}}>
+                                        <td>{item.name || item.product || '-'}</td>
+                                        <td>{item.qty || 1}</td>
+                                        <td>&euro;{(item.price||0).toFixed(2)}</td>
+                                        <td>&euro;{((item.qty||1) * (item.price||0)).toFixed(2)}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                                {o.delivery_date && <div style={{marginTop:8, fontSize:13, color:'var(--text-light)'}}><strong>Delivery:</strong> {new Date(o.delivery_date).toLocaleDateString()}</div>}
+                                {o.notes && <div style={{marginTop:4, fontSize:13, color:'var(--text-light)'}}><strong>Notes:</strong> {o.notes}</div>}
+                              </div>
+                            </td></tr>
+                          )}
+                        </React.Fragment>
+                      ))}</tbody>
+                    </table>
+                  </>}
+                </>
+              )}
+            </Modal>
+          )}
+
+          {/* Create/Edit Modal */}
+          {showModal && (
+            <Modal title={editing ? 'Edit Contact' : 'New Contact'} onClose={() => setShowModal(false)} wide
+              footer={<><button className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-primary" onClick={save}>Save</button></>}>
+              <h4 style={{marginBottom:12}}>Type & Business</h4>
+              <div className="form-row">
+                <div className="form-group"><label>Contact Type *</label>
+                  <select value={form.contact_type} onChange={e=>set('contact_type',e.target.value)} disabled={editing}>
+                    <option value="individual">Individual</option>
+                    <option value="company">Company</option>
+                    <option value="both">Both</option>
+                  </select>
+                </div>
+                <div className="form-group"><label>Business *</label>
+                  <select value={form.business} onChange={e=>set('business',e.target.value)} disabled={editing}>
+                    <option value="thekretan">The Kretan</option>
+                    <option value="panicsweets">Panic Sweets</option>
+                    <option value="both">Both</option>
+                  </select>
+                </div>
+              </div>
+
+              {(form.contact_type === 'individual' || form.contact_type === 'both') && <>
+                <h4 style={{marginTop:16, marginBottom:12}}>Personal Information</h4>
+                <div className="form-row">
+                  <div className="form-group"><label>First Name *</label><input value={form.first_name} onChange={e=>set('first_name',e.target.value)} /></div>
+                  <div className="form-group"><label>Last Name *</label><input value={form.last_name} onChange={e=>set('last_name',e.target.value)} /></div>
+                </div>
+                <div className="form-row-3">
+                  <div className="form-group"><label>Date of Birth</label><input type="date" value={form.date_of_birth} onChange={e=>set('date_of_birth',e.target.value)} /></div>
+                  <div className="form-group"><label>Name Day</label><input value={form.name_day} onChange={e=>set('name_day',e.target.value)} placeholder="e.g. 25 December" /></div>
+                  <div className="form-group"><label>Marital Status</label>
+                    <select value={form.marital_status} onChange={e=>set('marital_status',e.target.value)}>
+                      <option value="">-</option><option value="single">Single</option><option value="married">Married</option><option value="divorced">Divorced</option><option value="widowed">Widowed</option>
+                    </select>
+                  </div>
+                </div>
+                <h4 style={{marginTop:8, marginBottom:12}}>Family Details</h4>
+                <div className="form-row-3">
+                  <div className="form-group"><label>Spouse Name</label><input value={form.spouse_name} onChange={e=>set('spouse_name',e.target.value)} /></div>
+                  <div className="form-group"><label>Children Count</label><input type="number" min="0" value={form.children_count} onChange={e=>set('children_count',parseInt(e.target.value)||0)} /></div>
+                  <div className="form-group"><label>Children Names</label><input value={form.children_names} onChange={e=>set('children_names',e.target.value)} placeholder="comma separated" /></div>
+                </div>
+              </>}
+
+              {(form.contact_type === 'company' || form.contact_type === 'both') && <>
+                <h4 style={{marginTop:16, marginBottom:12}}>Company Information</h4>
+                <div className="form-row">
+                  <div className="form-group"><label>Company Name *</label><input value={form.company_name} onChange={e=>set('company_name',e.target.value)} /></div>
+                  <div className="form-group"><label>Business Type</label><input value={form.business_type} onChange={e=>set('business_type',e.target.value)} placeholder="e.g. Cafe, Hotel" /></div>
+                </div>
+                <div className="form-row-3">
+                  <div className="form-group"><label>Contact Person</label><input value={form.contact_person} onChange={e=>set('contact_person',e.target.value)} /></div>
+                  <div className="form-group"><label>Title</label><input value={form.contact_title} onChange={e=>set('contact_title',e.target.value)} placeholder="e.g. Owner, Buyer" /></div>
+                  <div className="form-group"><label>Tax ID</label><input value={form.tax_id} onChange={e=>set('tax_id',e.target.value)} /></div>
+                </div>
+                <div className="form-row-3">
+                  <div className="form-group"><label>Payment Terms</label>
+                    <select value={form.payment_terms} onChange={e=>set('payment_terms',e.target.value)}>
+                      <option value="on_delivery">On Delivery</option><option value="net15">Net 15</option><option value="net30">Net 30</option><option value="net60">Net 60</option><option value="prepaid">Prepaid</option>
+                    </select>
+                  </div>
+                  <div className="form-group"><label>Discount %</label><input type="number" min="0" max="100" step="0.5" value={form.discount_percent} onChange={e=>set('discount_percent',parseFloat(e.target.value)||0)} /></div>
+                  <div></div>
+                </div>
+              </>}
+
+              <h4 style={{marginTop:16, marginBottom:12}}>Contact Details</h4>
+              <div className="form-row-3">
+                <div className="form-group"><label>Email</label><input type="email" value={form.email} onChange={e=>set('email',e.target.value)} /></div>
+                <div className="form-group"><label>Phone</label><input value={form.phone} onChange={e=>set('phone',e.target.value)} /></div>
+                <div className="form-group"><label>Mobile</label><input value={form.mobile} onChange={e=>set('mobile',e.target.value)} /></div>
+              </div>
+              <div className="form-row-3">
+                <div className="form-group"><label>Address</label><input value={form.address} onChange={e=>set('address',e.target.value)} /></div>
+                <div className="form-group"><label>City</label><input value={form.city} onChange={e=>set('city',e.target.value)} /></div>
+                <div className="form-group"><label>Postal Code</label><input value={form.postal_code} onChange={e=>set('postal_code',e.target.value)} /></div>
+              </div>
+
+              <h4 style={{marginTop:16, marginBottom:12}}>Preferences & Notes</h4>
+              <div className="form-row">
+                <div className="form-group"><label>Preferred Contact</label>
+                  <select value={form.preferred_contact} onChange={e=>set('preferred_contact',e.target.value)}>
+                    <option value="email">Email</option><option value="sms">SMS</option><option value="phone">Phone</option><option value="whatsapp">WhatsApp</option>
+                  </select>
+                </div>
+                <div className="form-group"><label>Tags</label><input value={form.tags} onChange={e=>set('tags',e.target.value)} placeholder="e.g. VIP, Regular" /></div>
+              </div>
+              <div className="form-group"><label>Notes</label><textarea rows="3" value={form.notes} onChange={e=>set('notes',e.target.value)}></textarea></div>
+              <div style={{display:'flex', gap:20}}>
+                <div className="checkbox-group"><input type="checkbox" checked={form.consent_email} onChange={e=>set('consent_email',e.target.checked)} /><label>Consent for email</label></div>
+                <div className="checkbox-group"><input type="checkbox" checked={form.consent_sms} onChange={e=>set('consent_sms',e.target.checked)} /><label>Consent for SMS</label></div>
+              </div>
+            </Modal>
+          )}
+        </div>
+      );
+    }
+
+    // ============ KRETAN PURCHASES ============
+    function KretanPurchases() {
+      const [purchases, setPurchases] = useState([]);
+      const [total, setTotal] = useState(0);
+      const [page, setPage] = useState(1);
+      const [showModal, setShowModal] = useState(false);
+      const [customers, setCustomers] = useState([]);
+      const [form, setForm] = useState({ customer_id:'', items:[{name:'',qty:1,price:0}], total_amount:0, payment_method:'cash', notes:'' });
+
+      const load = () => {
+        api(`/kretan/purchases?page=${page}`).then(d => { setPurchases(d.purchases); setTotal(d.total); });
+      };
+      useEffect(() => { load(); }, [page]);
+
+      const openNew = async () => {
+        const d = await api('/contacts?limit=500');
+        const kretanContacts = d.contacts.filter(c => c.business === 'thekretan' || c.business === 'both');
+        setCustomers(kretanContacts);
+        setForm({ customer_id:'', items:[{name:'',qty:1,price:0}], total_amount:0, payment_method:'cash', notes:'', purchase_date: new Date().toISOString().split('T')[0] });
+        setShowModal(true);
+      };
+
+      const addItem = () => setForm(f => ({...f, items:[...f.items, {name:'',qty:1,price:0}]}));
+      const removeItem = (i) => setForm(f => ({...f, items: f.items.filter((_,idx)=>idx!==i)}));
+      const updateItem = (i, k, v) => {
+        setForm(f => {
+          const items = [...f.items];
+          items[i] = {...items[i], [k]: v};
+          const total_amount = items.reduce((s, it) => s + (it.qty * it.price), 0);
+          return {...f, items, total_amount};
+        });
+      };
+
+      const save = async () => {
+        try {
+          const result = await api('/kretan/purchases', { method:'POST', body: form });
+          showToast(`Purchase recorded! +${result.points_earned} points`);
+          setShowModal(false); load();
+        } catch(e) { showToast(e.message, 'error'); }
+      };
+
+      // Redeem modal
+      const [showRedeem, setShowRedeem] = useState(false);
+      const [redeemForm, setRedeemForm] = useState({ customer_id:'', points:0, description:'' });
+
+      const openRedeem = async () => {
+        const d = await api('/contacts?limit=500');
+        const kretanContacts = d.contacts.filter(c => c.business === 'thekretan' || c.business === 'both');
+        setCustomers(kretanContacts);
+        setRedeemForm({ customer_id:'', points:0, description:'' });
+        setShowRedeem(true);
+      };
+
+      const doRedeem = async () => {
+        try {
+          const r = await api('/kretan/purchases/redeem', { method:'POST', body: redeemForm });
+          showToast(r.message);
+          setShowRedeem(false);
+        } catch(e) { showToast(e.message, 'error'); }
+      };
+
+      const getDisplayName = (c) => {
+        if (c.contact_type === 'company') return c.company_name;
+        return `${c.first_name} ${c.last_name}`;
+      };
+
+      return (
+        <div className="content">
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20}}>
+            <h2><i className="fas fa-shopping-cart" style={{color:'var(--kretan-primary)', marginRight:8}}></i>Purchases & Rewards</h2>
+            <div className="btn-group">
+              <button className="btn btn-outline" onClick={openRedeem}><i className="fas fa-gift"></i> Redeem Points</button>
+              <button className="btn btn-kretan" onClick={openNew}><i className="fas fa-plus"></i> New Purchase</button>
+            </div>
+          </div>
+
+          <div className="card" style={{padding:0, overflow:'hidden'}}>
+            <table>
+              <thead><tr><th>Date</th><th>Customer</th><th>Amount</th><th>Points</th><th>Payment</th></tr></thead>
+              <tbody>
+                {purchases.map(p => (
+                  <tr key={p.id}>
+                    <td>{new Date(p.purchase_date).toLocaleDateString()}</td>
+                    <td style={{fontWeight:500}}>{p.first_name} {p.last_name}</td>
+                    <td style={{fontWeight:600}}>&euro;{p.total_amount.toFixed(2)}</td>
+                    <td><span className="points-display"><i className="fas fa-star"></i> +{p.points_earned}</span></td>
+                    <td><span className="tag tag-info">{p.payment_method}</span></td>
+                  </tr>
+                ))}
+                {purchases.length === 0 && <tr><td colSpan="5" style={{textAlign:'center',padding:40,color:'var(--text-light)'}}>No purchases recorded yet</td></tr>}
+              </tbody>
+            </table>
+          </div>
+
+          {showModal && (
+            <Modal title="New Purchase" onClose={() => setShowModal(false)} wide
+              footer={<><button className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-kretan" onClick={save}>Record Purchase</button></>}>
+              <div className="form-row">
+                <div className="form-group"><label>Customer *</label>
+                  <select value={form.customer_id} onChange={e=>setForm(f=>({...f, customer_id:e.target.value}))}>
+                    <option value="">Select customer...</option>
+                    {customers.map(c => <option key={c.id} value={c.id}>{getDisplayName(c)}</option>)}
+                  </select>
+                </div>
+                <div className="form-group"><label>Date</label><input type="date" value={form.purchase_date} onChange={e=>setForm(f=>({...f, purchase_date:e.target.value}))} /></div>
+              </div>
+              <h4 style={{marginBottom:8}}>Items</h4>
+              {form.items.map((item, i) => (
+                <div key={i} className="form-row-3" style={{alignItems:'end'}}>
+                  <div className="form-group"><label>Item</label><input value={item.name} onChange={e=>updateItem(i,'name',e.target.value)} placeholder="Item name" /></div>
+                  <div className="form-group"><label>Qty</label><input type="number" min="1" value={item.qty} onChange={e=>updateItem(i,'qty',parseInt(e.target.value)||1)} /></div>
+                  <div style={{display:'flex',gap:8,alignItems:'end'}}>
+                    <div className="form-group" style={{flex:1}}><label>Price</label><input type="number" step="0.01" value={item.price} onChange={e=>updateItem(i,'price',parseFloat(e.target.value)||0)} /></div>
+                    {form.items.length > 1 && <button className="btn btn-outline btn-sm" style={{marginBottom:16}} onClick={()=>removeItem(i)}><i className="fas fa-times"></i></button>}
+                  </div>
+                </div>
+              ))}
+              <button className="btn btn-outline btn-sm" onClick={addItem} style={{marginBottom:16}}><i className="fas fa-plus"></i> Add Item</button>
+              <div className="form-row">
+                <div className="form-group"><label>Total Amount</label><input type="number" step="0.01" value={form.total_amount.toFixed(2)} readOnly style={{fontWeight:700, fontSize:18}} /></div>
+                <div className="form-group"><label>Payment Method</label>
+                  <select value={form.payment_method} onChange={e=>setForm(f=>({...f,payment_method:e.target.value}))}>
+                    <option value="cash">Cash</option><option value="card">Card</option><option value="transfer">Transfer</option><option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+              <div className="form-group"><label>Notes</label><textarea rows="2" value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))}></textarea></div>
+            </Modal>
+          )}
+
+          {showRedeem && (
+            <Modal title="Redeem Points" onClose={() => setShowRedeem(false)}
+              footer={<><button className="btn btn-outline" onClick={() => setShowRedeem(false)}>Cancel</button><button className="btn btn-success" onClick={doRedeem}>Redeem</button></>}>
+              <div className="form-group"><label>Customer</label>
+                <select value={redeemForm.customer_id} onChange={e=>setRedeemForm(f=>({...f, customer_id:e.target.value}))}>
+                  <option value="">Select customer...</option>
+                  {customers.filter(c=>c.loyalty_points>0).map(c => <option key={c.id} value={c.id}>{getDisplayName(c)} ({c.loyalty_points} pts)</option>)}
+                </select>
+              </div>
+              <div className="form-group"><label>Points to Redeem</label><input type="number" min="0" value={redeemForm.points} onChange={e=>setRedeemForm(f=>({...f, points:parseInt(e.target.value)||0}))} /></div>
+              <div className="form-group"><label>Description</label><input value={redeemForm.description} onChange={e=>setRedeemForm(f=>({...f, description:e.target.value}))} placeholder="e.g. Discount on purchase" /></div>
+            </Modal>
+          )}
+        </div>
+      );
+    }
+
+    // ============ PANIC PRODUCTS ============
+    function PanicProducts() {
+      const [products, setProducts] = useState([]);
+      const [showModal, setShowModal] = useState(false);
+      const [editing, setEditing] = useState(null);
+      const emptyForm = { name:'', sku:'', description:'', category:'other', unit_price:0, unit:'piece', min_order_qty:1 };
+      const [form, setForm] = useState(emptyForm);
+      const set = (k, v) => setForm(p => ({...p, [k]: v}));
+
+      const load = () => { api('/panic/products').then(setProducts); };
+      useEffect(() => { load(); }, []);
+
+      const openNew = () => { setForm(emptyForm); setEditing(null); setShowModal(true); };
+      const openEdit = (p) => { setForm(p); setEditing(p.id); setShowModal(true); };
+
+      const save = async () => {
+        try {
+          if (editing) { await api(`/panic/products/${editing}`, {method:'PUT', body:form}); }
+          else { await api('/panic/products', {method:'POST', body:form}); }
+          showToast(editing ? 'Product updated' : 'Product created');
+          setShowModal(false); load();
+        } catch(e) { showToast(e.message, 'error'); }
+      };
+
+      const categories = {brownie:'Brownie',energy_bar:'Energy Bar',chocolate:'Chocolate',cookie:'Cookie',cake:'Cake',other:'Other'};
+
+      return (
+        <div className="content">
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20}}>
+            <h2><i className="fas fa-box" style={{color:'var(--panic-primary)', marginRight:8}}></i>Products</h2>
+            <button className="btn btn-panic" onClick={openNew}><i className="fas fa-plus"></i> Add Product</button>
+          </div>
+          <div className="card" style={{padding:0, overflow:'hidden'}}>
+            <table>
+              <thead><tr><th>Name</th><th>SKU</th><th>Category</th><th>Price</th><th>Unit</th><th>Min Qty</th><th></th></tr></thead>
+              <tbody>
+                {products.map(p => (
+                  <tr key={p.id}>
+                    <td style={{fontWeight:500}}>{p.name}</td>
+                    <td>{p.sku || '-'}</td>
+                    <td><span className="tag tag-purple">{categories[p.category]||p.category}</span></td>
+                    <td>&euro;{p.unit_price.toFixed(2)}</td>
+                    <td>{p.unit}</td>
+                    <td>{p.min_order_qty}</td>
+                    <td><button className="btn btn-outline btn-sm" onClick={()=>openEdit(p)}>Edit</button></td>
+                  </tr>
+                ))}
+                {products.length===0 && <tr><td colSpan="7" style={{textAlign:'center',padding:40,color:'var(--text-light)'}}>No products yet</td></tr>}
+              </tbody>
+            </table>
+          </div>
+
+          {showModal && (
+            <Modal title={editing ? 'Edit Product' : 'New Product'} onClose={() => setShowModal(false)}
+              footer={<><button className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-panic" onClick={save}>Save</button></>}>
+              <div className="form-row">
+                <div className="form-group"><label>Name *</label><input value={form.name} onChange={e=>set('name',e.target.value)} /></div>
+                <div className="form-group"><label>SKU</label><input value={form.sku} onChange={e=>set('sku',e.target.value)} /></div>
+              </div>
+              <div className="form-group"><label>Description</label><textarea rows="2" value={form.description} onChange={e=>set('description',e.target.value)}></textarea></div>
+              <div className="form-row-3">
+                <div className="form-group"><label>Category</label>
+                  <select value={form.category} onChange={e=>set('category',e.target.value)}>
+                    {Object.entries(categories).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+                  </select>
+                </div>
+                <div className="form-group"><label>Price</label><input type="number" step="0.01" value={form.unit_price} onChange={e=>set('unit_price',parseFloat(e.target.value)||0)} /></div>
+                <div className="form-group"><label>Unit</label>
+                  <select value={form.unit} onChange={e=>set('unit',e.target.value)}>
+                    <option value="piece">Piece</option><option value="box">Box</option><option value="kg">Kg</option><option value="pack">Pack</option>
+                  </select>
+                </div>
+              </div>
+              <div className="form-group"><label>Min Order Qty</label><input type="number" min="1" value={form.min_order_qty} onChange={e=>set('min_order_qty',parseInt(e.target.value)||1)} /></div>
+            </Modal>
+          )}
+        </div>
+      );
+    }
+
+    // ============ PANIC ORDERS ============
+    function PanicOrders() {
+      const [orders, setOrders] = useState([]);
+      const [total, setTotal] = useState(0);
+      const [page, setPage] = useState(1);
+      const [showModal, setShowModal] = useState(false);
+      const [contacts, setContacts] = useState([]);
+      const [products, setProducts] = useState([]);
+      const [form, setForm] = useState({ contact_id:'', items:[{product:'',qty:1,price:0}], total_amount:0, status:'pending', payment_status:'unpaid', notes:'', delivery_date:'' });
+
+      const load = () => { api(`/panic/orders?page=${page}`).then(d => { setOrders(d.orders); setTotal(d.total); }); };
+      useEffect(() => { load(); }, [page]);
+
+      const openNew = async () => {
+        const [c, p] = await Promise.all([api('/contacts?limit=500'), api('/panic/products')]);
+        const panicContacts = c.contacts.filter(x => x.business === 'panicsweets' || x.business === 'both');
+        setContacts(panicContacts); setProducts(p);
+        setForm({ contact_id:'', items:[{product:'',qty:1,price:0}], total_amount:0, status:'pending', payment_status:'unpaid', notes:'', delivery_date:'', order_date: new Date().toISOString().split('T')[0] });
+        setShowModal(true);
+      };
+
+      const addItem = () => setForm(f => ({...f, items:[...f.items, {product:'',qty:1,price:0}]}));
+      const updateItem = (i, k, v) => {
+        setForm(f => {
+          const items = [...f.items];
+          items[i] = {...items[i], [k]: v};
+          if (k === 'product') {
+            const p = products.find(x => x.name === v);
+            if (p) items[i].price = p.unit_price;
+          }
+          const total_amount = items.reduce((s, it) => s + (it.qty * it.price), 0);
+          return {...f, items, total_amount};
+        });
+      };
+
+      const save = async () => {
+        try {
+          await api('/panic/orders', { method:'POST', body: form });
+          showToast('Order created');
+          setShowModal(false); load();
+        } catch(e) { showToast(e.message, 'error'); }
+      };
+
+      const updateStatus = async (id, status) => {
+        try { await api(`/panic/orders/${id}`, {method:'PUT', body:{status}}); showToast('Status updated'); load(); } catch(e) { showToast(e.message, 'error'); }
+      };
+
+      const statusColors = {pending:'tag-warning',confirmed:'tag-info',in_production:'tag-purple',shipped:'tag-info',delivered:'tag-success',cancelled:'tag-danger'};
+
+      const getDisplayName = (c) => {
+        if (c.contact_type === 'company') return c.company_name;
+        return `${c.first_name} ${c.last_name}`;
+      };
+
+      return (
+        <div className="content">
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20}}>
+            <h2><i className="fas fa-truck" style={{color:'var(--panic-primary)', marginRight:8}}></i>Orders</h2>
+            <button className="btn btn-panic" onClick={openNew}><i className="fas fa-plus"></i> New Order</button>
+          </div>
+
+          <div className="card" style={{padding:0, overflow:'hidden'}}>
+            <table>
+              <thead><tr><th>Date</th><th>Customer/Company</th><th>Amount</th><th>Status</th><th>Payment</th><th>Actions</th></tr></thead>
+              <tbody>
+                {orders.map(o => (
+                  <tr key={o.id}>
+                    <td>{new Date(o.order_date).toLocaleDateString()}</td>
+                    <td style={{fontWeight:500}}>{o.company_name || `${o.first_name} ${o.last_name}`}</td>
+                    <td style={{fontWeight:600}}>&euro;{o.total_amount.toFixed(2)}</td>
+                    <td><span className={`tag ${statusColors[o.status]||'tag-info'}`}>{o.status}</span></td>
+                    <td><span className={`tag ${o.payment_status==='paid'?'tag-success':'tag-warning'}`}>{o.payment_status}</span></td>
+                    <td>
+                      <select value={o.status} onChange={e => updateStatus(o.id, e.target.value)} style={{padding:'4px 8px', fontSize:12, borderRadius:6, border:'1px solid var(--border)'}}>
+                        <option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="in_production">In Production</option>
+                        <option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+                {orders.length===0 && <tr><td colSpan="6" style={{textAlign:'center',padding:40,color:'var(--text-light)'}}>No orders yet</td></tr>}
+              </tbody>
+            </table>
+          </div>
+
+          {showModal && (
+            <Modal title="New Order" onClose={() => setShowModal(false)} wide
+              footer={<><button className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-panic" onClick={save}>Create Order</button></>}>
+              <div className="form-row">
+                <div className="form-group"><label>Customer/Company *</label>
+                  <select value={form.contact_id} onChange={e=>setForm(f=>({...f, contact_id:e.target.value}))}>
+                    <option value="">Select contact...</option>
+                    {contacts.map(c => <option key={c.id} value={c.id}>{getDisplayName(c)}</option>)}
+                  </select>
+                </div>
+                <div className="form-group"><label>Order Date</label><input type="date" value={form.order_date} onChange={e=>setForm(f=>({...f, order_date:e.target.value}))} /></div>
+              </div>
+              <h4 style={{marginBottom:8}}>Items</h4>
+              {form.items.map((item, i) => (
+                <div key={i} className="form-row-3" style={{alignItems:'end'}}>
+                  <div className="form-group"><label>Product</label>
+                    <select value={item.product} onChange={e=>updateItem(i,'product',e.target.value)}>
+                      <option value="">Select or type...</option>
+                      {products.map(p => <option key={p.id} value={p.name}>{p.name} (&euro;{p.unit_price})</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group"><label>Qty</label><input type="number" min="1" value={item.qty} onChange={e=>updateItem(i,'qty',parseInt(e.target.value)||1)} /></div>
+                  <div className="form-group"><label>Price</label><input type="number" step="0.01" value={item.price} onChange={e=>updateItem(i,'price',parseFloat(e.target.value)||0)} /></div>
+                </div>
+              ))}
+              <button className="btn btn-outline btn-sm" onClick={addItem} style={{marginBottom:16}}><i className="fas fa-plus"></i> Add Item</button>
+              <div className="form-row">
+                <div className="form-group"><label>Total</label><input type="number" value={form.total_amount.toFixed(2)} readOnly style={{fontWeight:700, fontSize:18}} /></div>
+                <div className="form-group"><label>Delivery Date</label><input type="date" value={form.delivery_date} onChange={e=>setForm(f=>({...f, delivery_date:e.target.value}))} /></div>
+              </div>
+              <div className="form-group"><label>Notes</label><textarea rows="2" value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))}></textarea></div>
+            </Modal>
+          )}
+        </div>
+      );
+    }
+
+    // ============ PROMOTIONS ============
+    function Promotions() {
+      const [promotions, setPromotions] = useState([]);
+      const [total, setTotal] = useState(0);
+      const [filter, setFilter] = useState('');
+      const [showModal, setShowModal] = useState(false);
+      const emptyForm = { business:'thekretan', name:'', type:'email', subject:'', content:'', target_segment:'all', status:'draft', scheduled_date:'' };
+      const [form, setForm] = useState(emptyForm);
+      const set = (k, v) => setForm(p => ({...p, [k]: v}));
+
+      const load = () => { api(`/promotions?business=${filter}`).then(d => { setPromotions(d.promotions); setTotal(d.total); }); };
+      useEffect(() => { load(); }, [filter]);
+
+      const save = async () => {
+        try { await api('/promotions', {method:'POST', body:form}); showToast('Promotion created'); setShowModal(false); load(); }
+        catch(e) { showToast(e.message, 'error'); }
+      };
+
+      const markSent = async (id) => {
+        try { const r = await api(`/promotions/${id}/send`, {method:'POST'}); showToast(r.message); load(); }
+        catch(e) { showToast(e.message, 'error'); }
+      };
+
+      const deletePromo = async (id) => {
+        if (!confirm('Delete this promotion?')) return;
+        try { await api(`/promotions/${id}`, {method:'DELETE'}); showToast('Deleted'); load(); }
+        catch(e) { showToast(e.message, 'error'); }
+      };
+
+      return (
+        <div className="content">
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20}}>
+            <h2><i className="fas fa-bullhorn" style={{marginRight:8}}></i>Promotions</h2>
+            <button className="btn btn-primary" onClick={() => {setForm(emptyForm); setShowModal(true);}}><i className="fas fa-plus"></i> New Promotion</button>
+          </div>
+
+          <div className="tabs">
+            <div className={`tab ${filter===''?'active':''}`} onClick={()=>setFilter('')}>All</div>
+            <div className={`tab ${filter==='thekretan'?'active':''}`} onClick={()=>setFilter('thekretan')}>The Kretan</div>
+            <div className={`tab ${filter==='panicsweets'?'active':''}`} onClick={()=>setFilter('panicsweets')}>Panic Sweets</div>
+          </div>
+
+          <div className="card" style={{padding:0, overflow:'hidden'}}>
+            <table>
+              <thead><tr><th>Business</th><th>Name</th><th>Type</th><th>Segment</th><th>Status</th><th>Recipients</th><th>Actions</th></tr></thead>
+              <tbody>
+                {promotions.map(p => (
+                  <tr key={p.id}>
+                    <td><span className={`tag ${p.business==='thekretan'?'tag-warning':'tag-danger'}`}>{p.business==='thekretan'?'The Kretan':'Panic Sweets'}</span></td>
+                    <td style={{fontWeight:500}}>{p.name}</td>
+                    <td><i className={`fas fa-${p.type==='email'?'envelope':'sms'}`}></i> {p.type}</td>
+                    <td>{p.target_segment}</td>
+                    <td><span className={`tag ${p.status==='sent'?'tag-success':p.status==='draft'?'tag-info':'tag-warning'}`}>{p.status}</span></td>
+                    <td>{p.recipients_count || '-'}</td>
+                    <td>
+                      <div className="btn-group">
+                        {p.status === 'draft' && <button className="btn btn-success btn-sm" onClick={()=>markSent(p.id)} title="Mark as sent"><i className="fas fa-paper-plane"></i></button>}
+                        <button className="btn btn-outline btn-sm" onClick={()=>deletePromo(p.id)} title="Delete"><i className="fas fa-trash"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {promotions.length===0 && <tr><td colSpan="7" style={{textAlign:'center',padding:40,color:'var(--text-light)'}}>No promotions yet</td></tr>}
+              </tbody>
+            </table>
+          </div>
+
+          {showModal && (
+            <Modal title="New Promotion" onClose={() => setShowModal(false)} wide
+              footer={<><button className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-primary" onClick={save}>Create</button></>}>
+              <div className="form-row">
+                <div className="form-group"><label>Business *</label>
+                  <select value={form.business} onChange={e=>set('business',e.target.value)}>
+                    <option value="thekretan">The Kretan</option><option value="panicsweets">Panic Sweets</option>
+                  </select>
+                </div>
+                <div className="form-group"><label>Type *</label>
+                  <select value={form.type} onChange={e=>set('type',e.target.value)}>
+                    <option value="email">Email</option><option value="sms">SMS</option>
+                  </select>
+                </div>
+              </div>
+              <div className="form-group"><label>Campaign Name *</label><input value={form.name} onChange={e=>set('name',e.target.value)} placeholder="e.g. Summer Promotion 2026" /></div>
+              {form.type === 'email' && <div className="form-group"><label>Subject</label><input value={form.subject} onChange={e=>set('subject',e.target.value)} /></div>}
+              <div className="form-group"><label>Content *</label><textarea rows="6" value={form.content} onChange={e=>set('content',e.target.value)} placeholder="Write your message..."></textarea></div>
+              <div className="form-row">
+                <div className="form-group"><label>Target Segment</label>
+                  <select value={form.target_segment} onChange={e=>set('target_segment',e.target.value)}>
+                    <option value="all">All</option><option value="high_value">High Value</option><option value="inactive">Inactive (90+ days)</option>
+                  </select>
+                </div>
+                <div className="form-group"><label>Scheduled Date</label><input type="date" value={form.scheduled_date} onChange={e=>set('scheduled_date',e.target.value)} /></div>
+              </div>
+            </Modal>
+          )}
+        </div>
+      );
+    }
+
+    // ============ REWARDS SETTINGS ============
+    function RewardsSettings() {
+      const [settings, setSettings] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const auth = useAuth();
+
+      useEffect(() => {
+        api('/rewards/settings').then(s => { setSettings(s); setLoading(false); });
+      }, []);
+
+      const save = async () => {
+        try { await api('/rewards/settings', {method:'PUT', body:settings}); showToast('Settings saved'); }
+        catch(e) { showToast(e.message, 'error'); }
+      };
+
+      if (loading) return <div className="content"><p>Loading...</p></div>;
+
+      return (
+        <div className="content">
+          <h2 style={{marginBottom:20}}><i className="fas fa-cog" style={{marginRight:8}}></i>Rewards Settings</h2>
+          <div className="card" style={{maxWidth:600}}>
+            <div className="form-group"><label>Points per Euro spent</label>
+              <input type="number" step="0.1" value={settings.points_per_euro} onChange={e=>setSettings(s=>({...s, points_per_euro:parseFloat(e.target.value)||0}))} />
+              <small style={{color:'var(--text-light)'}}>How many points the customer earns per €1 spent</small>
+            </div>
+            <div className="form-group"><label>Redemption rate (Euro per point)</label>
+              <input type="number" step="0.001" value={settings.redemption_rate} onChange={e=>setSettings(s=>({...s, redemption_rate:parseFloat(e.target.value)||0}))} />
+              <small style={{color:'var(--text-light)'}}>How much each point is worth in Euro when redeemed</small>
+            </div>
+            <div className="form-group"><label>Welcome bonus (points)</label>
+              <input type="number" value={settings.welcome_bonus} onChange={e=>setSettings(s=>({...s, welcome_bonus:parseInt(e.target.value)||0}))} />
+            </div>
+            <div className="form-group"><label>Birthday bonus (points)</label>
+              <input type="number" value={settings.birthday_bonus} onChange={e=>setSettings(s=>({...s, birthday_bonus:parseInt(e.target.value)||0}))} />
+            </div>
+            <div className="form-group"><label>Minimum points to redeem</label>
+              <input type="number" value={settings.min_redeem_points} onChange={e=>setSettings(s=>({...s, min_redeem_points:parseInt(e.target.value)||0}))} />
+            </div>
+            {auth.role === 'admin' && <button className="btn btn-primary" onClick={save}><i className="fas fa-save"></i> Save Settings</button>}
+          </div>
+        </div>
+      );
+    }
+
+    // ============ APP ============
+    function App() {
+      const [user, setUser] = useState(null);
+      const [currentPage, setCurrentPage] = useState('dashboard');
+      const [sidebarOpen, setSidebarOpen] = useState(false);
+
+      useEffect(() => {
+        const token = localStorage.getItem('crm_token');
+        if (token) {
+          api('/auth/me').then(d => setUser(d.user)).catch(() => localStorage.removeItem('crm_token'));
+        }
+      }, []);
+
+      const logout = () => { localStorage.removeItem('crm_token'); setUser(null); };
+
+      if (!user) return <LoginPage onLogin={setUser} />;
+
+      const pages = {
+        dashboard: Dashboard,
+        contacts: Contacts,
+        kretan_purchases: KretanPurchases,
+        panic_products: PanicProducts,
+        panic_orders: PanicOrders,
+        promotions: Promotions,
+        rewards_settings: RewardsSettings,
+      };
+
+      const PageComponent = pages[currentPage] || Dashboard;
+
+      return (
+        <AuthContext.Provider value={user}>
+        <ToastProvider>
+          <div className="app">
+            {/* Sidebar */}
+            <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+              <div className="sidebar-header">
+                <h2>CRM System</h2>
+                <small>The Kretan & Panic Sweets</small>
+              </div>
+
+              <div className="nav-section">
+                <div className="nav-item" style={currentPage==='dashboard'?{background:'rgba(255,255,255,0.1)',color:'#fff',borderLeft:'3px solid #E91E63'}:{}} onClick={() => {setCurrentPage('dashboard'); setSidebarOpen(false);}}>
+                  <i className="fas fa-chart-pie"></i> Dashboard
+                </div>
+              </div>
+
+              <div className="nav-section">
+                <div className="nav-section-title">Contacts</div>
+                <div className={`nav-item ${currentPage==='contacts'?'active':''}`} onClick={() => {setCurrentPage('contacts'); setSidebarOpen(false);}}>
+                  <i className="fas fa-address-book"></i> All Contacts
+                </div>
+              </div>
+
+              <div className="nav-section">
+                <div className="nav-section-title">Purchases & Rewards (The Kretan)</div>
+                <div className={`nav-item ${currentPage==='kretan_purchases'?'active':''}`} onClick={() => {setCurrentPage('kretan_purchases'); setSidebarOpen(false);}}>
+                  <i className="fas fa-shopping-cart"></i> Purchases & Rewards
+                </div>
+              </div>
+
+              <div className="nav-section">
+                <div className="nav-section-title">Panic Sweets</div>
+                <div className={`nav-item ${currentPage==='panic_products'?'active':''}`} onClick={() => {setCurrentPage('panic_products'); setSidebarOpen(false);}}>
+                  <i className="fas fa-box"></i> Products
+                </div>
+                <div className={`nav-item ${currentPage==='panic_orders'?'active':''}`} onClick={() => {setCurrentPage('panic_orders'); setSidebarOpen(false);}}>
+                  <i className="fas fa-truck"></i> Orders
+                </div>
+              </div>
+
+              <div className="nav-section">
+                <div className="nav-section-title">Marketing</div>
+                <div className={`nav-item ${currentPage==='promotions'?'active':''}`} onClick={() => {setCurrentPage('promotions'); setSidebarOpen(false);}}>
+                  <i className="fas fa-bullhorn"></i> Promotions
+                </div>
+              </div>
+
+              <div className="nav-section">
+                <div className="nav-section-title">Settings</div>
+                <div className={`nav-item ${currentPage==='rewards_settings'?'active':''}`} onClick={() => {setCurrentPage('rewards_settings'); setSidebarOpen(false);}}>
+                  <i className="fas fa-star"></i> Rewards Program
+                </div>
+              </div>
+            </div>
+
+            {/* Main */}
+            <div className="main">
+              <div className="topbar">
+                <button className="btn btn-outline" onClick={() => setSidebarOpen(!sidebarOpen)} style={{display:'none', '@media(maxWidth:768px)':{display:'block'}}}>
+                  <i className="fas fa-bars"></i>
+                </button>
+                <div style={{fontSize:14, color:'var(--text-light)'}}>
+                  {currentPage === 'dashboard' ? 'Dashboard' :
+                   currentPage === 'contacts' ? 'Contacts > All Contacts' :
+                   currentPage === 'kretan_purchases' ? 'Purchases & Rewards (The Kretan) > Purchases & Rewards' :
+                   currentPage === 'panic_products' ? 'Panic Sweets > Products' :
+                   currentPage === 'panic_orders' ? 'Panic Sweets > Orders' :
+                   currentPage === 'promotions' ? 'Marketing > Promotions' :
+                   'Settings > Rewards'}
+                </div>
+                <div style={{display:'flex', alignItems:'center', gap:12}}>
+                  <span style={{fontSize:13}}><i className="fas fa-user" style={{marginRight:6}}></i>{user.full_name}</span>
+                  <button className="btn btn-outline btn-sm" onClick={logout}><i className="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+              </div>
+              <PageComponent />
+            </div>
+          </div>
+        </ToastProvider>
+        </AuthContext.Provider>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

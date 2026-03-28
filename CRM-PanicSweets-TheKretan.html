@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM - The Kretan & Panic Sweets</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --kretan: #8B4513; --kretan-light: #f5ebe0;
+      --panic: #E91E63; --panic-light: #FCE4EC;
+      --bg: #f0f2f5; --card: #fff; --text: #1a1a2e; --text-light: #6b7280;
+      --border: #e5e7eb; --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+      --info: #3b82f6; --purple: #8b5cf6;
+      --sidebar-w: 250px; --radius: 10px;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+    .app { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar { width: var(--sidebar-w); background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%); color: #fff; position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto; z-index: 100; }
+    .sidebar-hdr { padding: 24px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-hdr h2 { font-size: 17px; font-weight: 700; }
+    .sidebar-hdr small { color: rgba(255,255,255,0.4); font-size: 11px; }
+    .nav-sec { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .nav-sec-title { padding: 6px 20px 4px; font-size: 10px; text-transform: uppercase; color: rgba(255,255,255,0.25); letter-spacing: 1.5px; font-weight: 600; }
+    .nav-item { display: flex; align-items: center; padding: 9px 20px; cursor: pointer; color: rgba(255,255,255,0.6); font-size: 13px; gap: 10px; transition: all 0.15s; }
+    .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+    .nav-item.active { background: rgba(255,255,255,0.1); color: #fff; border-left: 3px solid var(--panic); padding-left: 17px; }
+    .nav-item i { width: 18px; text-align: center; font-size: 13px; }
+    .nav-badge { background: var(--panic); font-size: 10px; padding: 1px 6px; border-radius: 10px; margin-left: auto; }
+
+    /* Main */
+    .main { margin-left: var(--sidebar-w); flex: 1; }
+    .topbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+    .breadcrumb { font-size: 13px; color: var(--text-light); }
+    .content { padding: 24px; max-width: 1400px; }
+
+    /* Cards */
+    .card { background: var(--card); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 16px; }
+    .card-body { padding: 20px; }
+    .card-hdr { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .card-hdr h3 { font-size: 15px; font-weight: 600; }
+
+    /* Stats */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .stat { background: var(--card); border-radius: var(--radius); padding: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 10px; }
+    .stat-val { font-size: 26px; font-weight: 700; }
+    .stat-lbl { font-size: 11px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+    /* Table */
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { text-align: left; padding: 10px 14px; font-size: 11px; text-transform: uppercase; color: var(--text-light); border-bottom: 2px solid var(--border); font-weight: 600; letter-spacing: 0.3px; }
+    tbody td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; }
+    tbody tr:hover { background: #f9fafb; }
+    tbody tr { cursor: pointer; transition: background 0.1s; }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; font-family: inherit; }
+    .btn-primary { background: #1a1a2e; color: #fff; } .btn-primary:hover { background: #2d2d52; }
+    .btn-kretan { background: var(--kretan); color: #fff; } .btn-kretan:hover { opacity: 0.9; }
+    .btn-panic { background: var(--panic); color: #fff; } .btn-panic:hover { opacity: 0.9; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-outline { background: #fff; border: 1px solid var(--border); color: var(--text); } .btn-outline:hover { background: #f9fafb; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-group { display: flex; gap: 6px; }
+
+    /* Forms */
+    .fg { margin-bottom: 14px; }
+    .fg label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #374151; }
+    .fg input, .fg select, .fg textarea { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; background: #fff; transition: border-color 0.2s; }
+    .fg input:focus, .fg select:focus, .fg textarea:focus { border-color: #1a1a2e; outline: none; box-shadow: 0 0 0 3px rgba(26,26,46,0.08); }
+    .fr { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .fr3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .chk { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .chk input { width: auto; }
+
+    /* Modal */
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+    .modal { background: #fff; border-radius: 14px; width: 92%; max-width: 720px; max-height: 88vh; overflow-y: auto; box-shadow: 0 25px 60px rgba(0,0,0,0.2); }
+    .modal.wide { max-width: 900px; }
+    .modal-hdr { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-hdr h3 { font-size: 17px; font-weight: 600; }
+    .modal-body { padding: 24px; }
+    .modal-ft { padding: 14px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+    .close-x { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-light); padding: 4px; }
+
+    /* Tags */
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 600; }
+    .tag-green { background: #ecfdf5; color: #065f46; }
+    .tag-yellow { background: #fffbeb; color: #92400e; }
+    .tag-red { background: #fef2f2; color: #991b1b; }
+    .tag-blue { background: #eff6ff; color: #1e40af; }
+    .tag-purple { background: #f5f3ff; color: #5b21b6; }
+    .tag-pink { background: #fdf2f8; color: #9d174d; }
+
+    .pts { display: inline-flex; align-items: center; gap: 4px; background: #fef9c3; color: #a16207; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+
+    /* Search */
+    .search-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+    .search-bar input { flex: 1; padding: 9px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; background: #fff; }
+    .search-bar input:focus { border-color: #1a1a2e; outline: none; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 16px; }
+    .tab { padding: 9px 18px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-light); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; }
+    .tab.active { color: var(--text); border-bottom-color: #1a1a2e; }
+    .tab:hover { color: var(--text); }
+
+    /* Section title */
+    .sec-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .sec-title h2 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; z-index: 2000; color: #fff; animation: slideUp 0.3s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+    .toast-ok { background: var(--success); }
+    .toast-err { background: var(--danger); }
+    @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* Pagination */
+    .pager { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 16px; font-size: 13px; }
+
+    /* Detail grid */
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .detail-grid .dl { font-size: 13px; line-height: 1.8; }
+    .detail-grid strong { color: #374151; }
+
+    /* Empty */
+    .empty { text-align: center; padding: 60px 20px; color: var(--text-light); }
+    .empty i { font-size: 42px; opacity: 0.2; margin-bottom: 12px; }
+    .empty h4 { font-size: 16px; color: var(--text); margin-bottom: 4px; }
+
+    @media (max-width: 800px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .fr, .fr3 { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .detail-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script type="text/babel">
+const {useState, useEffect, useCallback, useMemo} = React;
+
+// ====== DATA STORE (localStorage) ======
+const STORE_KEY = 'crm_data_v2';
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return getDefaultData();
+}
+
+function saveData(data) {
+  localStorage.setItem(STORE_KEY, JSON.stringify(data));
+}
+
+function getDefaultData() {
+  return {
+    kretan_customers: [],
+    kretan_purchases: [],
+    kretan_rewards: [],
+    panic_companies: [],
+    panic_products: [
+      {id:1, name:'Classic Brownie', sku:'BR-001', category:'brownie', unit_price:3.50, unit:'piece', min_order_qty:10, active:true},
+      {id:2, name:'Energy Bar Almond', sku:'EB-001', category:'energy_bar', unit_price:2.80, unit:'piece', min_order_qty:20, active:true},
+      {id:3, name:'Energy Bar Chocolate', sku:'EB-002', category:'energy_bar', unit_price:2.80, unit:'piece', min_order_qty:20, active:true},
+      {id:4, name:'Dark Chocolate Truffle', sku:'CH-001', category:'chocolate', unit_price:4.00, unit:'piece', min_order_qty:12, active:true},
+    ],
+    panic_packages: [],
+    panic_orders: [],
+    promotions: [],
+    rewards_settings: { points_per_euro:1, redemption_rate:0.01, welcome_bonus:50, birthday_bonus:100, min_redeem_points:100 },
+    next_id: 100
+  };
+}
+
+function useStore() {
+  const [data, setDataRaw] = useState(loadData);
+  const setData = useCallback((fn) => {
+    setDataRaw(prev => {
+      const next = typeof fn === 'function' ? fn(prev) : fn;
+      saveData(next);
+      return next;
+    });
+  }, []);
+  const nextId = useCallback(() => {
+    let id;
+    setData(d => { id = d.next_id; return {...d, next_id: d.next_id + 1}; });
+    return id;
+  }, [setData]);
+  return { data, setData, nextId };
+}
+
+// ====== TOAST ======
+let _toast = ()=>{};
+function ToastContainer() {
+  const [t, setT] = useState(null);
+  _toast = (msg, ok=true) => { setT({msg, ok}); setTimeout(()=>setT(null), 2500); };
+  if (!t) return null;
+  return <div className={`toast ${t.ok?'toast-ok':'toast-err'}`}>{t.msg}</div>;
+}
+const toast = (m,ok=true)=>_toast(m,ok);
+
+// ====== MODAL ======
+function Modal({title, children, onClose, footer, wide}) {
+  return <div className="modal-bg" onClick={onClose}>
+    <div className={`modal ${wide?'wide':''}`} onClick={e=>e.stopPropagation()}>
+      <div className="modal-hdr"><h3>{title}</h3><button className="close-x" onClick={onClose}><i className="fas fa-times"/></button></div>
+      <div className="modal-body">{children}</div>
+      {footer && <div className="modal-ft">{footer}</div>}
+    </div>
+  </div>;
+}
+
+// ====== HELPERS ======
+const fmtDate = d => d ? new Date(d).toLocaleDateString('el-GR') : '-';
+const fmtMoney = n => '\u20AC' + (n||0).toFixed(2);
+const now = () => new Date().toISOString();
+const today = () => new Date().toISOString().split('T')[0];
+
+// ====== DASHBOARD ======
+function Dashboard({data}) {
+  const kc = data.kretan_customers.filter(c=>c.active!==false);
+  const kRev = data.kretan_purchases.reduce((s,p)=>s+p.total_amount,0);
+  const kPts = kc.reduce((s,c)=>s+(c.loyalty_points||0),0);
+
+  const pc = data.panic_companies.filter(c=>c.active!==false);
+  const pRev = data.panic_orders.reduce((s,o)=>s+o.total_amount,0);
+  const pPending = data.panic_orders.filter(o=>['pending','confirmed','in_production'].includes(o.status)).length;
+
+  const promosSent = data.promotions.filter(p=>p.status==='sent').length;
+  const promosDraft = data.promotions.filter(p=>p.status==='draft').length;
+
+  const topCustomers = [...kc].sort((a,b)=>(b.total_spent||0)-(a.total_spent||0)).slice(0,5);
+  const topCompanies = [...pc].sort((a,b)=>(b.total_revenue||0)-(a.total_revenue||0)).slice(0,5);
+
+  return <div className="content">
+    <h2 style={{marginBottom:20, fontSize:22, fontWeight:700}}>Dashboard</h2>
+
+    <h3 style={{marginBottom:10, color:'var(--kretan)', display:'flex', alignItems:'center', gap:8}}>
+      <i className="fas fa-store"/> The Kretan
+    </h3>
+    <div className="stats">
+      <div className="stat"><div className="stat-icon" style={{background:'#ecfdf5',color:'#065f46'}}><i className="fas fa-users"/></div><div className="stat-val">{kc.length}</div><div className="stat-lbl">Customers</div></div>
+      <div className="stat"><div className="stat-icon" style={{background:'#eff6ff',color:'#1e40af'}}><i className="fas fa-euro-sign"/></div><div className="stat-val">{kRev.toFixed(0)}</div><div className="stat-lbl">Total Revenue</div></div>
+      <div className="stat"><div className="stat-icon" style={{background:'#fef9c3',color:'#a16207'}}><i className="fas fa-star"/></div><div className="stat-val">{kPts}</div><div className="stat-lbl">Active Points</div></div>
+      <div className="stat"><div className="stat-icon" style={{background:'#f5f3ff',color:'#7c3aed'}}><i className="fas fa-receipt"/></div><div className="stat-val">{data.kretan_purchases.length}</div><div className="stat-lbl">Purchases</div></div>
+    </div>
+
+    {topCustomers.length > 0 && <div className="card"><div className="card-hdr"><h3>Top Customers</h3></div><div className="tbl-wrap"><table>
+      <thead><tr><th>Name</th><th>Spent</th><th>Points</th><th>Visits</th></tr></thead>
+      <tbody>{topCustomers.map(c=><tr key={c.id}><td style={{fontWeight:600}}>{c.first_name} {c.last_name}</td><td>{fmtMoney(c.total_spent)}</td><td><span className="pts"><i className="fas fa-star"/> {c.loyalty_points||0}</span></td><td>{c.visit_count||0}</td></tr>)}</tbody>
+    </table></div></div>}
+
+    <h3 style={{marginBottom:10, marginTop:24, color:'var(--panic)', display:'flex', alignItems:'center', gap:8}}>
+      <i className="fas fa-cookie-bite"/> Panic Sweets
+    </h3>
+    <div className="stats">
+      <div className="stat"><div className="stat-icon" style={{background:'#fdf2f8',color:'#9d174d'}}><i className="fas fa-building"/></div><div className="stat-val">{pc.length}</div><div className="stat-lbl">Companies</div></div>
+      <div className="stat"><div className="stat-icon" style={{background:'#eff6ff',color:'#1e40af'}}><i className="fas fa-euro-sign"/></div><div className="stat-val">{pRev.toFixed(0)}</div><div className="stat-lbl">Total Revenue</div></div>
+      <div className="stat"><div className="stat-icon" style={{background:'#fffbeb',color:'#92400e'}}><i className="fas fa-clock"/></div><div className="stat-val">{pPending}</div><div className="stat-lbl">Pending Orders</div></div>
+      <div className="stat"><div className="stat-icon" style={{background:'#f5f3ff',color:'#7c3aed'}}><i className="fas fa-truck"/></div><div className="stat-val">{data.panic_orders.length}</div><div className="stat-lbl">Total Orders</div></div>
+    </div>
+
+    {topCompanies.length > 0 && <div className="card"><div className="card-hdr"><h3>Top Companies</h3></div><div className="tbl-wrap"><table>
+      <thead><tr><th>Company</th><th>Orders</th><th>Revenue</th></tr></thead>
+      <tbody>{topCompanies.map(c=><tr key={c.id}><td style={{fontWeight:600}}>{c.company_name}</td><td>{c.total_orders||0}</td><td style={{fontWeight:600}}>{fmtMoney(c.total_revenue)}</td></tr>)}</tbody>
+    </table></div></div>}
+
+    <div className="stats" style={{marginTop:20}}>
+      <div className="stat"><div className="stat-icon" style={{background:'#ecfdf5',color:'#065f46'}}><i className="fas fa-paper-plane"/></div><div className="stat-val">{promosSent}</div><div className="stat-lbl">Promotions Sent</div></div>
+      <div className="stat"><div className="stat-icon" style={{background:'#fffbeb',color:'#92400e'}}><i className="fas fa-edit"/></div><div className="stat-val">{promosDraft}</div><div className="stat-lbl">Draft Promotions</div></div>
+    </div>
+  </div>;
+}
+
+// ====== KRETAN CUSTOMERS ======
+function KretanCustomers({data, setData, nextId}) {
+  const [search, setSearch] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [detail, setDetail] = useState(null);
+  const [page, setPage] = useState(1);
+  const PER = 25;
+
+  const empty = {first_name:'',last_name:'',email:'',phone:'',mobile:'',address:'',city:'',postal_code:'',
+    date_of_birth:'',name_day:'',marital_status:'',spouse_name:'',children_count:0,children_names:'',children_birthdays:'',
+    notes:'',tags:'',preferred_contact:'email',consent_email:false,consent_sms:false};
+  const [form, setForm] = useState(empty);
+  const set = (k,v)=>setForm(f=>({...f,[k]:v}));
+
+  const filtered = useMemo(()=>{
+    const s = search.toLowerCase();
+    return data.kretan_customers.filter(c=>c.active!==false).filter(c=>!s||`${c.first_name} ${c.last_name} ${c.email} ${c.phone} ${c.mobile}`.toLowerCase().includes(s));
+  },[data.kretan_customers, search]);
+
+  const paged = filtered.slice((page-1)*PER, page*PER);
+  const pages = Math.ceil(filtered.length/PER)||1;
+
+  const openNew = ()=>{ setForm(empty); setEditing(null); setShowForm(true); };
+  const openEdit = c=>{ setForm({...c}); setEditing(c.id); setShowForm(true); };
+
+  const save = ()=>{
+    if(!form.first_name||!form.last_name){ toast('First and last name required',false); return; }
+    setData(d=>{
+      if(editing){
+        return {...d, kretan_customers: d.kretan_customers.map(c=>c.id===editing?{...c,...form, updated_at:now()}:c)};
+      } else {
+        const id = d.next_id;
+        const pts = d.rewards_settings.welcome_bonus||0;
+        const cust = {...form, id, loyalty_points:pts, total_spent:0, visit_count:0, active:true, created_at:now(), updated_at:now()};
+        const rewards = pts>0 ? [...d.kretan_rewards, {id:d.next_id+1, customer_id:id, type:'earned', points:pts, description:'Welcome bonus', created_at:now()}] : d.kretan_rewards;
+        return {...d, kretan_customers:[...d.kretan_customers, cust], kretan_rewards: rewards, next_id: d.next_id+2};
+      }
+    });
+    toast(editing?'Customer updated':'Customer created');
+    setShowForm(false);
+  };
+
+  const del = (id)=>{
+    if(!confirm('Delete this customer?')) return;
+    setData(d=>({...d, kretan_customers:d.kretan_customers.filter(c=>c.id!==id)}));
+    toast('Customer deleted'); setDetail(null);
+  };
+
+  const openDetail = (c)=>{
+    const purchases = data.kretan_purchases.filter(p=>p.customer_id===c.id).sort((a,b)=>b.purchase_date?.localeCompare(a.purchase_date));
+    const rewards = data.kretan_rewards.filter(r=>r.customer_id===c.id).sort((a,b)=>b.created_at?.localeCompare(a.created_at));
+    setDetail({customer:c, purchases, rewards});
+  };
+
+  return <div className="content">
+    <div className="sec-title">
+      <h2><i className="fas fa-users" style={{color:'var(--kretan)'}}/> Customers</h2>
+      <button className="btn btn-kretan" onClick={openNew}><i className="fas fa-plus"/> Add Customer</button>
+    </div>
+
+    <div className="search-bar">
+      <input placeholder="Search customers..." value={search} onChange={e=>{setSearch(e.target.value);setPage(1);}}/>
+      <span style={{padding:'8px',color:'var(--text-light)',fontSize:12,whiteSpace:'nowrap'}}>{filtered.length} total</span>
+    </div>
+
+    <div className="card" style={{padding:0,overflow:'hidden'}}><div className="tbl-wrap"><table>
+      <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Points</th><th>Spent</th><th>Visits</th></tr></thead>
+      <tbody>
+        {paged.map(c=><tr key={c.id} onClick={()=>openDetail(c)}>
+          <td style={{fontWeight:600}}>{c.first_name} {c.last_name}</td>
+          <td>{c.email||'-'}</td><td>{c.mobile||c.phone||'-'}</td>
+          <td><span className="pts"><i className="fas fa-star"/> {c.loyalty_points||0}</span></td>
+          <td>{fmtMoney(c.total_spent)}</td><td>{c.visit_count||0}</td>
+        </tr>)}
+        {paged.length===0&&<tr><td colSpan="6"><div className="empty"><i className="fas fa-users"/><h4>No customers yet</h4><p>Click "Add Customer" to get started</p></div></td></tr>}
+      </tbody>
+    </table></div></div>
+
+    {pages>1&&<div className="pager">
+      <button className="btn btn-outline btn-sm" disabled={page<=1} onClick={()=>setPage(p=>p-1)}>Prev</button>
+      <span>Page {page} / {pages}</span>
+      <button className="btn btn-outline btn-sm" disabled={page>=pages} onClick={()=>setPage(p=>p+1)}>Next</button>
+    </div>}
+
+    {detail&&<Modal title={`${detail.customer.first_name} ${detail.customer.last_name}`} onClose={()=>setDetail(null)} wide
+      footer={<><button className="btn btn-outline" onClick={()=>{openEdit(detail.customer);setDetail(null);}}><i className="fas fa-edit"/> Edit</button>
+        <button className="btn btn-danger btn-sm" onClick={()=>del(detail.customer.id)}><i className="fas fa-trash"/> Delete</button></>}>
+      <div className="detail-grid">
+        <div className="dl"><strong>Email:</strong> {detail.customer.email||'-'}<br/><strong>Phone:</strong> {detail.customer.phone||'-'}<br/><strong>Mobile:</strong> {detail.customer.mobile||'-'}<br/><strong>Address:</strong> {[detail.customer.address,detail.customer.city,detail.customer.postal_code].filter(Boolean).join(', ')||'-'}</div>
+        <div className="dl"><strong>Birthday:</strong> {detail.customer.date_of_birth||'-'}<br/><strong>Name Day:</strong> {detail.customer.name_day||'-'}<br/><strong>Status:</strong> {detail.customer.marital_status||'-'}<br/><strong>Spouse:</strong> {detail.customer.spouse_name||'-'}<br/><strong>Children:</strong> {detail.customer.children_count||0} {detail.customer.children_names?`(${detail.customer.children_names})`:''}</div>
+      </div>
+      <div className="stats" style={{gridTemplateColumns:'1fr 1fr 1fr'}}>
+        <div className="stat" style={{textAlign:'center'}}><div className="stat-val" style={{color:'var(--kretan)'}}><i className="fas fa-star"/> {detail.customer.loyalty_points||0}</div><div className="stat-lbl">Points</div></div>
+        <div className="stat" style={{textAlign:'center'}}><div className="stat-val">{fmtMoney(detail.customer.total_spent)}</div><div className="stat-lbl">Total Spent</div></div>
+        <div className="stat" style={{textAlign:'center'}}><div className="stat-val">{detail.customer.visit_count||0}</div><div className="stat-lbl">Visits</div></div>
+      </div>
+      {detail.purchases.length>0&&<><h4 style={{margin:'14px 0 8px'}}>Recent Purchases</h4><table>
+        <thead><tr><th>Date</th><th>Amount</th><th>Points</th><th>Payment</th></tr></thead>
+        <tbody>{detail.purchases.slice(0,10).map(p=><tr key={p.id}><td>{fmtDate(p.purchase_date)}</td><td>{fmtMoney(p.total_amount)}</td><td>+{p.points_earned}</td><td><span className="tag tag-blue">{p.payment_method}</span></td></tr>)}</tbody>
+      </table></>}
+      {detail.rewards.length>0&&<><h4 style={{margin:'14px 0 8px'}}>Rewards History</h4><table>
+        <thead><tr><th>Date</th><th>Type</th><th>Points</th><th>Description</th></tr></thead>
+        <tbody>{detail.rewards.slice(0,10).map(r=><tr key={r.id}><td>{fmtDate(r.created_at)}</td><td><span className={`tag ${r.type==='earned'?'tag-green':'tag-yellow'}`}>{r.type}</span></td><td style={{fontWeight:600,color:r.points>0?'var(--success)':'var(--danger)'}}>{r.points>0?'+':''}{r.points}</td><td>{r.description}</td></tr>)}</tbody>
+      </table></>}
+    </Modal>}
+
+    {showForm&&<Modal title={editing?'Edit Customer':'New Customer'} onClose={()=>setShowForm(false)} wide
+      footer={<><button className="btn btn-outline" onClick={()=>setShowForm(false)}>Cancel</button><button className="btn btn-kretan" onClick={save}>Save</button></>}>
+      <h4 style={{marginBottom:10}}>Personal Information</h4>
+      <div className="fr"><div className="fg"><label>First Name *</label><input value={form.first_name} onChange={e=>set('first_name',e.target.value)}/></div><div className="fg"><label>Last Name *</label><input value={form.last_name} onChange={e=>set('last_name',e.target.value)}/></div></div>
+      <div className="fr3"><div className="fg"><label>Email</label><input type="email" value={form.email} onChange={e=>set('email',e.target.value)}/></div><div className="fg"><label>Phone</label><input value={form.phone} onChange={e=>set('phone',e.target.value)}/></div><div className="fg"><label>Mobile</label><input value={form.mobile} onChange={e=>set('mobile',e.target.value)}/></div></div>
+      <div className="fr3"><div className="fg"><label>Address</label><input value={form.address} onChange={e=>set('address',e.target.value)}/></div><div className="fg"><label>City</label><input value={form.city} onChange={e=>set('city',e.target.value)}/></div><div className="fg"><label>Postal Code</label><input value={form.postal_code} onChange={e=>set('postal_code',e.target.value)}/></div></div>
+      <div className="fr3"><div className="fg"><label>Date of Birth</label><input type="date" value={form.date_of_birth} onChange={e=>set('date_of_birth',e.target.value)}/></div><div className="fg"><label>Name Day</label><input value={form.name_day} onChange={e=>set('name_day',e.target.value)} placeholder="e.g. 25 December"/></div><div className="fg"><label>Marital Status</label><select value={form.marital_status} onChange={e=>set('marital_status',e.target.value)}><option value="">-</option><option value="single">Single</option><option value="married">Married</option><option value="divorced">Divorced</option><option value="widowed">Widowed</option></select></div></div>
+      <h4 style={{margin:'10px 0'}}>Family</h4>
+      <div className="fr3"><div className="fg"><label>Spouse Name</label><input value={form.spouse_name} onChange={e=>set('spouse_name',e.target.value)}/></div><div className="fg"><label>Children</label><input type="number" min="0" value={form.children_count} onChange={e=>set('children_count',parseInt(e.target.value)||0)}/></div><div className="fg"><label>Children Names</label><input value={form.children_names} onChange={e=>set('children_names',e.target.value)} placeholder="comma separated"/></div></div>
+      <h4 style={{margin:'10px 0'}}>Preferences</h4>
+      <div className="fr"><div className="fg"><label>Preferred Contact</label><select value={form.preferred_contact} onChange={e=>set('preferred_contact',e.target.value)}><option value="email">Email</option><option value="sms">SMS</option><option value="phone">Phone</option><option value="whatsapp">WhatsApp</option></select></div><div className="fg"><label>Tags</label><input value={form.tags} onChange={e=>set('tags',e.target.value)} placeholder="e.g. VIP, Regular"/></div></div>
+      <div className="fg"><label>Notes</label><textarea rows="2" value={form.notes} onChange={e=>set('notes',e.target.value)}/></div>
+      <div style={{display:'flex',gap:20}}><label className="chk"><input type="checkbox" checked={form.consent_email} onChange={e=>set('consent_email',e.target.checked)}/>Email consent</label><label className="chk"><input type="checkbox" checked={form.consent_sms} onChange={e=>set('consent_sms',e.target.checked)}/>SMS consent</label></div>
+    </Modal>}
+  </div>;
+}
+
+// ====== PURCHASES & REWARDS ======
+function KretanPurchases({data, setData}) {
+  const [showForm, setShowForm] = useState(false);
+  const [showRedeem, setShowRedeem] = useState(false);
+  const customers = data.kretan_customers.filter(c=>c.active!==false);
+
+  const emptyForm = {customer_id:'',items:[{name:'',qty:1,price:0}],total_amount:0,payment_method:'cash',notes:'',purchase_date:today()};
+  const [form, setForm] = useState(emptyForm);
+
+  const addItem = ()=>setForm(f=>({...f,items:[...f.items,{name:'',qty:1,price:0}]}));
+  const removeItem = i=>setForm(f=>({...f,items:f.items.filter((_,idx)=>idx!==i)}));
+  const updateItem = (i,k,v)=>setForm(f=>{
+    const items=[...f.items]; items[i]={...items[i],[k]:v};
+    return {...f, items, total_amount: items.reduce((s,it)=>s+(it.qty*it.price),0)};
+  });
+
+  const savePurchase = ()=>{
+    if(!form.customer_id){toast('Select a customer',false);return;}
+    const pts = Math.floor(form.total_amount * (data.rewards_settings.points_per_euro||1));
+    setData(d=>{
+      const pid = d.next_id;
+      const purchase = {id:pid, customer_id:parseInt(form.customer_id), purchase_date:form.purchase_date||now(), items:form.items, total_amount:form.total_amount, points_earned:pts, payment_method:form.payment_method, notes:form.notes};
+      const custs = d.kretan_customers.map(c=>c.id===parseInt(form.customer_id)?{...c, loyalty_points:(c.loyalty_points||0)+pts, total_spent:(c.total_spent||0)+form.total_amount, visit_count:(c.visit_count||0)+1, updated_at:now()}:c);
+      const reward = {id:pid+1, customer_id:parseInt(form.customer_id), type:'earned', points:pts, description:`Purchase #${pid} - ${fmtMoney(form.total_amount)}`, created_at:now()};
+      return {...d, kretan_purchases:[...d.kretan_purchases,purchase], kretan_customers:custs, kretan_rewards:[...d.kretan_rewards,reward], next_id:d.next_id+2};
+    });
+    toast(`Purchase recorded! +${pts} points`);
+    setShowForm(false);
+  };
+
+  const [redeemForm, setRedeemForm] = useState({customer_id:'',points:0,description:''});
+  const doRedeem = ()=>{
+    const cid = parseInt(redeemForm.customer_id);
+    const c = data.kretan_customers.find(x=>x.id===cid);
+    if(!c){toast('Select customer',false);return;}
+    if(redeemForm.points<(data.rewards_settings.min_redeem_points||100)){toast(`Minimum ${data.rewards_settings.min_redeem_points} points`,false);return;}
+    if((c.loyalty_points||0)<redeemForm.points){toast('Not enough points',false);return;}
+    const euroVal = redeemForm.points * (data.rewards_settings.redemption_rate||0.01);
+    setData(d=>{
+      const custs = d.kretan_customers.map(x=>x.id===cid?{...x,loyalty_points:x.loyalty_points-redeemForm.points}:x);
+      const reward = {id:d.next_id, customer_id:cid, type:'redeemed', points:-redeemForm.points, description:redeemForm.description||`Redeemed ${redeemForm.points} pts (${fmtMoney(euroVal)})`, created_at:now()};
+      return {...d, kretan_customers:custs, kretan_rewards:[...d.kretan_rewards,reward], next_id:d.next_id+1};
+    });
+    toast(`Redeemed ${redeemForm.points} points (${fmtMoney(redeemForm.points*(data.rewards_settings.redemption_rate||0.01))})`);
+    setShowRedeem(false);
+  };
+
+  const purchases = [...data.kretan_purchases].sort((a,b)=>(b.purchase_date||'').localeCompare(a.purchase_date||''));
+  const getCustName = id=>{ const c=data.kretan_customers.find(x=>x.id===id); return c?`${c.first_name} ${c.last_name}`:'Unknown'; };
+
+  return <div className="content">
+    <div className="sec-title">
+      <h2><i className="fas fa-shopping-cart" style={{color:'var(--kretan)'}}/> Purchases & Rewards</h2>
+      <div className="btn-group"><button className="btn btn-outline" onClick={()=>{setRedeemForm({customer_id:'',points:0,description:''});setShowRedeem(true);}}><i className="fas fa-gift"/> Redeem</button><button className="btn btn-kretan" onClick={()=>{setForm(emptyForm);setShowForm(true);}}><i className="fas fa-plus"/> New Purchase</button></div>
+    </div>
+    <div className="card" style={{padding:0,overflow:'hidden'}}><div className="tbl-wrap"><table>
+      <thead><tr><th>Date</th><th>Customer</th><th>Amount</th><th>Points</th><th>Payment</th></tr></thead>
+      <tbody>{purchases.map(p=><tr key={p.id}><td>{fmtDate(p.purchase_date)}</td><td style={{fontWeight:500}}>{getCustName(p.customer_id)}</td><td style={{fontWeight:600}}>{fmtMoney(p.total_amount)}</td><td><span className="pts"><i className="fas fa-star"/> +{p.points_earned}</span></td><td><span className="tag tag-blue">{p.payment_method}</span></td></tr>)}
+        {purchases.length===0&&<tr><td colSpan="5"><div className="empty"><i className="fas fa-receipt"/><h4>No purchases yet</h4></div></td></tr>}
+      </tbody>
+    </table></div></div>
+
+    {showForm&&<Modal title="New Purchase" onClose={()=>setShowForm(false)} wide footer={<><button className="btn btn-outline" onClick={()=>setShowForm(false)}>Cancel</button><button className="btn btn-kretan" onClick={savePurchase}>Record</button></>}>
+      <div className="fr"><div className="fg"><label>Customer *</label><select value={form.customer_id} onChange={e=>setForm(f=>({...f,customer_id:e.target.value}))}><option value="">Select...</option>{customers.map(c=><option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>)}</select></div><div className="fg"><label>Date</label><input type="date" value={form.purchase_date} onChange={e=>setForm(f=>({...f,purchase_date:e.target.value}))}/></div></div>
+      <h4 style={{margin:'8px 0'}}>Items</h4>
+      {form.items.map((it,i)=><div key={i} className="fr3" style={{alignItems:'end'}}><div className="fg"><label>Item</label><input value={it.name} onChange={e=>updateItem(i,'name',e.target.value)} placeholder="Item name"/></div><div className="fg"><label>Qty</label><input type="number" min="1" value={it.qty} onChange={e=>updateItem(i,'qty',parseInt(e.target.value)||1)}/></div><div style={{display:'flex',gap:6,alignItems:'end'}}><div className="fg" style={{flex:1}}><label>Price</label><input type="number" step="0.01" value={it.price} onChange={e=>updateItem(i,'price',parseFloat(e.target.value)||0)}/></div>{form.items.length>1&&<button className="btn btn-outline btn-sm" style={{marginBottom:14}} onClick={()=>removeItem(i)}><i className="fas fa-times"/></button>}</div></div>)}
+      <button className="btn btn-outline btn-sm" onClick={addItem} style={{marginBottom:12}}><i className="fas fa-plus"/> Add Item</button>
+      <div className="fr"><div className="fg"><label>Total</label><input value={fmtMoney(form.total_amount)} readOnly style={{fontWeight:700,fontSize:18}}/></div><div className="fg"><label>Payment</label><select value={form.payment_method} onChange={e=>setForm(f=>({...f,payment_method:e.target.value}))}><option value="cash">Cash</option><option value="card">Card</option><option value="transfer">Transfer</option></select></div></div>
+      <div className="fg"><label>Notes</label><textarea rows="2" value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))}/></div>
+    </Modal>}
+
+    {showRedeem&&<Modal title="Redeem Points" onClose={()=>setShowRedeem(false)} footer={<><button className="btn btn-outline" onClick={()=>setShowRedeem(false)}>Cancel</button><button className="btn btn-success" onClick={doRedeem}>Redeem</button></>}>
+      <div className="fg"><label>Customer</label><select value={redeemForm.customer_id} onChange={e=>setRedeemForm(f=>({...f,customer_id:e.target.value}))}><option value="">Select...</option>{customers.filter(c=>(c.loyalty_points||0)>0).map(c=><option key={c.id} value={c.id}>{c.first_name} {c.last_name} ({c.loyalty_points} pts)</option>)}</select></div>
+      <div className="fg"><label>Points to Redeem</label><input type="number" min="0" value={redeemForm.points} onChange={e=>setRedeemForm(f=>({...f,points:parseInt(e.target.value)||0}))}/></div>
+      <div className="fg"><label>Description</label><input value={redeemForm.description} onChange={e=>setRedeemForm(f=>({...f,description:e.target.value}))} placeholder="e.g. Discount on purchase"/></div>
+    </Modal>}
+  </div>;
+}
+
+// ====== PANIC COMPANIES ======
+function PanicCompanies({data, setData}) {
+  const [search, setSearch] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [detail, setDetail] = useState(null);
+
+  const empty = {company_name:'',contact_person:'',contact_title:'',email:'',phone:'',mobile:'',address:'',city:'',postal_code:'',tax_id:'',business_type:'',payment_terms:'on_delivery',discount_percent:0,notes:'',tags:'',consent_email:false,consent_sms:false};
+  const [form, setForm] = useState(empty);
+  const set = (k,v)=>setForm(f=>({...f,[k]:v}));
+
+  const filtered = useMemo(()=>{
+    const s=search.toLowerCase();
+    return data.panic_companies.filter(c=>c.active!==false).filter(c=>!s||`${c.company_name} ${c.contact_person} ${c.email}`.toLowerCase().includes(s));
+  },[data.panic_companies,search]);
+
+  const save = ()=>{
+    if(!form.company_name){toast('Company name required',false);return;}
+    setData(d=>{
+      if(editing) return {...d, panic_companies:d.panic_companies.map(c=>c.id===editing?{...c,...form,updated_at:now()}:c)};
+      const id=d.next_id;
+      return {...d, panic_companies:[...d.panic_companies,{...form,id,total_orders:0,total_revenue:0,active:true,created_at:now(),updated_at:now()}], next_id:id+1};
+    });
+    toast(editing?'Company updated':'Company created');
+    setShowForm(false);
+  };
+
+  const openDetail = c=>{
+    const orders = data.panic_orders.filter(o=>o.company_id===c.id).sort((a,b)=>(b.order_date||'').localeCompare(a.order_date||''));
+    setDetail({company:c, orders});
+  };
+
+  const terms = {on_delivery:'On Delivery',net15:'Net 15',net30:'Net 30',net60:'Net 60',prepaid:'Prepaid'};
+
+  return <div className="content">
+    <div className="sec-title">
+      <h2><i className="fas fa-building" style={{color:'var(--panic)'}}/> Companies</h2>
+      <button className="btn btn-panic" onClick={()=>{setForm(empty);setEditing(null);setShowForm(true);}}><i className="fas fa-plus"/> Add Company</button>
+    </div>
+    <div className="search-bar"><input placeholder="Search companies..." value={search} onChange={e=>setSearch(e.target.value)}/><span style={{padding:'8px',color:'var(--text-light)',fontSize:12,whiteSpace:'nowrap'}}>{filtered.length} total</span></div>
+    <div className="card" style={{padding:0,overflow:'hidden'}}><div className="tbl-wrap"><table>
+      <thead><tr><th>Company</th><th>Contact</th><th>Email</th><th>Orders</th><th>Revenue</th><th>Terms</th></tr></thead>
+      <tbody>{filtered.map(c=><tr key={c.id} onClick={()=>openDetail(c)}>
+        <td style={{fontWeight:600}}>{c.company_name}</td><td>{c.contact_person||'-'}</td><td>{c.email||'-'}</td><td>{c.total_orders||0}</td><td style={{fontWeight:600}}>{fmtMoney(c.total_revenue)}</td><td><span className="tag tag-blue">{terms[c.payment_terms]||c.payment_terms}</span></td>
+      </tr>)}
+      {filtered.length===0&&<tr><td colSpan="6"><div className="empty"><i className="fas fa-building"/><h4>No companies yet</h4></div></td></tr>}
+      </tbody>
+    </table></div></div>
+
+    {detail&&<Modal title={detail.company.company_name} onClose={()=>setDetail(null)} wide footer={<button className="btn btn-outline" onClick={()=>{setForm({...detail.company});setEditing(detail.company.id);setDetail(null);setShowForm(true);}}><i className="fas fa-edit"/> Edit</button>}>
+      <div className="detail-grid">
+        <div className="dl"><strong>Contact:</strong> {detail.company.contact_person||'-'} {detail.company.contact_title?`(${detail.company.contact_title})`:''}<br/><strong>Email:</strong> {detail.company.email||'-'}<br/><strong>Phone:</strong> {detail.company.phone||'-'} / {detail.company.mobile||'-'}<br/><strong>Address:</strong> {[detail.company.address,detail.company.city,detail.company.postal_code].filter(Boolean).join(', ')||'-'}</div>
+        <div className="dl"><strong>Tax ID:</strong> {detail.company.tax_id||'-'}<br/><strong>Type:</strong> {detail.company.business_type||'-'}<br/><strong>Terms:</strong> {terms[detail.company.payment_terms]||'-'}<br/><strong>Discount:</strong> {detail.company.discount_percent||0}%</div>
+      </div>
+      <div className="stats" style={{gridTemplateColumns:'1fr 1fr'}}><div className="stat" style={{textAlign:'center'}}><div className="stat-val">{detail.company.total_orders||0}</div><div className="stat-lbl">Orders</div></div><div className="stat" style={{textAlign:'center'}}><div className="stat-val">{fmtMoney(detail.company.total_revenue)}</div><div className="stat-lbl">Revenue</div></div></div>
+      {detail.orders.length>0&&<><h4 style={{margin:'12px 0 8px'}}>Orders</h4><table><thead><tr><th>Date</th><th>Amount</th><th>Status</th><th>Payment</th></tr></thead><tbody>{detail.orders.map(o=><tr key={o.id}><td>{fmtDate(o.order_date)}</td><td>{fmtMoney(o.total_amount)}</td><td><span className={`tag ${o.status==='delivered'?'tag-green':o.status==='cancelled'?'tag-red':'tag-yellow'}`}>{o.status}</span></td><td><span className={`tag ${o.payment_status==='paid'?'tag-green':'tag-yellow'}`}>{o.payment_status}</span></td></tr>)}</tbody></table></>}
+    </Modal>}
+
+    {showForm&&<Modal title={editing?'Edit Company':'New Company'} onClose={()=>setShowForm(false)} wide footer={<><button className="btn btn-outline" onClick={()=>setShowForm(false)}>Cancel</button><button className="btn btn-panic" onClick={save}>Save</button></>}>
+      <div className="fr"><div className="fg"><label>Company Name *</label><input value={form.company_name} onChange={e=>set('company_name',e.target.value)}/></div><div className="fg"><label>Business Type</label><input value={form.business_type} onChange={e=>set('business_type',e.target.value)} placeholder="e.g. Cafe, Hotel"/></div></div>
+      <div className="fr3"><div className="fg"><label>Contact Person</label><input value={form.contact_person} onChange={e=>set('contact_person',e.target.value)}/></div><div className="fg"><label>Title</label><input value={form.contact_title} onChange={e=>set('contact_title',e.target.value)}/></div><div className="fg"><label>Tax ID</label><input value={form.tax_id} onChange={e=>set('tax_id',e.target.value)}/></div></div>
+      <div className="fr3"><div className="fg"><label>Email</label><input value={form.email} onChange={e=>set('email',e.target.value)}/></div><div className="fg"><label>Phone</label><input value={form.phone} onChange={e=>set('phone',e.target.value)}/></div><div className="fg"><label>Mobile</label><input value={form.mobile} onChange={e=>set('mobile',e.target.value)}/></div></div>
+      <div className="fr3"><div className="fg"><label>Address</label><input value={form.address} onChange={e=>set('address',e.target.value)}/></div><div className="fg"><label>City</label><input value={form.city} onChange={e=>set('city',e.target.value)}/></div><div className="fg"><label>Postal Code</label><input value={form.postal_code} onChange={e=>set('postal_code',e.target.value)}/></div></div>
+      <div className="fr3"><div className="fg"><label>Payment Terms</label><select value={form.payment_terms} onChange={e=>set('payment_terms',e.target.value)}><option value="on_delivery">On Delivery</option><option value="net15">Net 15</option><option value="net30">Net 30</option><option value="net60">Net 60</option><option value="prepaid">Prepaid</option></select></div><div className="fg"><label>Discount %</label><input type="number" min="0" max="100" value={form.discount_percent} onChange={e=>set('discount_percent',parseFloat(e.target.value)||0)}/></div><div className="fg"><label>Tags</label><input value={form.tags} onChange={e=>set('tags',e.target.value)}/></div></div>
+      <div className="fg"><label>Notes</label><textarea rows="2" value={form.notes} onChange={e=>set('notes',e.target.value)}/></div>
+      <div style={{display:'flex',gap:20}}><label className="chk"><input type="checkbox" checked={form.consent_email} onChange={e=>set('consent_email',e.target.checked)}/>Email consent</label><label className="chk"><input type="checkbox" checked={form.consent_sms} onChange={e=>set('consent_sms',e.target.checked)}/>SMS consent</label></div>
+    </Modal>}
+  </div>;
+}
+
+// ====== PANIC PRODUCTS ======
+function PanicProducts({data, setData}) {
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const empty = {name:'',sku:'',description:'',category:'other',unit_price:0,unit:'piece',min_order_qty:1};
+  const [form, setForm] = useState(empty);
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+  const cats = {brownie:'Brownie',energy_bar:'Energy Bar',chocolate:'Chocolate',cookie:'Cookie',cake:'Cake',other:'Other'};
+
+  const save = ()=>{
+    if(!form.name){toast('Name required',false);return;}
+    setData(d=>{
+      if(editing) return {...d, panic_products:d.panic_products.map(p=>p.id===editing?{...p,...form}:p)};
+      return {...d, panic_products:[...d.panic_products,{...form,id:d.next_id,active:true}], next_id:d.next_id+1};
+    });
+    toast(editing?'Product updated':'Product created');
+    setShowForm(false);
+  };
+
+  return <div className="content">
+    <div className="sec-title"><h2><i className="fas fa-box" style={{color:'var(--panic)'}}/> Products</h2><button className="btn btn-panic" onClick={()=>{setForm(empty);setEditing(null);setShowForm(true);}}><i className="fas fa-plus"/> Add Product</button></div>
+    <div className="card" style={{padding:0,overflow:'hidden'}}><div className="tbl-wrap"><table>
+      <thead><tr><th>Name</th><th>SKU</th><th>Category</th><th>Price</th><th>Unit</th><th>Min Qty</th><th></th></tr></thead>
+      <tbody>{data.panic_products.filter(p=>p.active!==false).map(p=><tr key={p.id}>
+        <td style={{fontWeight:600}}>{p.name}</td><td>{p.sku||'-'}</td><td><span className="tag tag-purple">{cats[p.category]||p.category}</span></td><td>{fmtMoney(p.unit_price)}</td><td>{p.unit}</td><td>{p.min_order_qty}</td>
+        <td><button className="btn btn-outline btn-sm" onClick={()=>{setForm(p);setEditing(p.id);setShowForm(true);}}>Edit</button></td>
+      </tr>)}{data.panic_products.length===0&&<tr><td colSpan="7"><div className="empty"><i className="fas fa-box"/><h4>No products</h4></div></td></tr>}</tbody>
+    </table></div></div>
+
+    {showForm&&<Modal title={editing?'Edit Product':'New Product'} onClose={()=>setShowForm(false)} footer={<><button className="btn btn-outline" onClick={()=>setShowForm(false)}>Cancel</button><button className="btn btn-panic" onClick={save}>Save</button></>}>
+      <div className="fr"><div className="fg"><label>Name *</label><input value={form.name} onChange={e=>set('name',e.target.value)}/></div><div className="fg"><label>SKU</label><input value={form.sku} onChange={e=>set('sku',e.target.value)}/></div></div>
+      <div className="fg"><label>Description</label><textarea rows="2" value={form.description} onChange={e=>set('description',e.target.value)}/></div>
+      <div className="fr3"><div className="fg"><label>Category</label><select value={form.category} onChange={e=>set('category',e.target.value)}>{Object.entries(cats).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></div><div className="fg"><label>Price</label><input type="number" step="0.01" value={form.unit_price} onChange={e=>set('unit_price',parseFloat(e.target.value)||0)}/></div><div className="fg"><label>Unit</label><select value={form.unit} onChange={e=>set('unit',e.target.value)}><option value="piece">Piece</option><option value="box">Box</option><option value="kg">Kg</option><option value="pack">Pack</option></select></div></div>
+      <div className="fg"><label>Min Order Qty</label><input type="number" min="1" value={form.min_order_qty} onChange={e=>set('min_order_qty',parseInt(e.target.value)||1)}/></div>
+    </Modal>}
+  </div>;
+}
+
+// ====== PANIC ORDERS ======
+function PanicOrders({data, setData}) {
+  const [showForm, setShowForm] = useState(false);
+  const companies = data.panic_companies.filter(c=>c.active!==false);
+  const products = data.panic_products.filter(p=>p.active!==false);
+  const emptyForm = {company_id:'',items:[{product:'',qty:1,price:0}],total_amount:0,status:'pending',payment_status:'unpaid',notes:'',delivery_date:'',order_date:today()};
+  const [form, setForm] = useState(emptyForm);
+
+  const addItem = ()=>setForm(f=>({...f,items:[...f.items,{product:'',qty:1,price:0}]}));
+  const updateItem = (i,k,v)=>setForm(f=>{
+    const items=[...f.items]; items[i]={...items[i],[k]:v};
+    if(k==='product'){ const p=products.find(x=>x.name===v); if(p) items[i].price=p.unit_price; }
+    return {...f, items, total_amount:items.reduce((s,it)=>s+(it.qty*it.price),0)};
+  });
+
+  const saveOrder = ()=>{
+    if(!form.company_id){toast('Select company',false);return;}
+    setData(d=>{
+      const oid = d.next_id;
+      const order = {id:oid, company_id:parseInt(form.company_id), order_date:form.order_date, delivery_date:form.delivery_date, items:form.items, total_amount:form.total_amount, status:form.status, payment_status:form.payment_status, notes:form.notes};
+      const comps = d.panic_companies.map(c=>c.id===parseInt(form.company_id)?{...c,total_orders:(c.total_orders||0)+1,total_revenue:(c.total_revenue||0)+form.total_amount,updated_at:now()}:c);
+      return {...d, panic_orders:[...d.panic_orders,order], panic_companies:comps, next_id:oid+1};
+    });
+    toast('Order created');
+    setShowForm(false);
+  };
+
+  const updateStatus = (id, status)=>{
+    setData(d=>({...d, panic_orders:d.panic_orders.map(o=>o.id===id?{...o,status}:o)}));
+    toast('Status updated');
+  };
+
+  const orders = [...data.panic_orders].sort((a,b)=>(b.order_date||'').localeCompare(a.order_date||''));
+  const getComp = id=>{const c=data.panic_companies.find(x=>x.id===id);return c?c.company_name:'Unknown';};
+  const stColors = {pending:'tag-yellow',confirmed:'tag-blue',in_production:'tag-purple',shipped:'tag-blue',delivered:'tag-green',cancelled:'tag-red'};
+
+  return <div className="content">
+    <div className="sec-title"><h2><i className="fas fa-truck" style={{color:'var(--panic)'}}/> Orders</h2><button className="btn btn-panic" onClick={()=>{setForm(emptyForm);setShowForm(true);}}><i className="fas fa-plus"/> New Order</button></div>
+    <div className="card" style={{padding:0,overflow:'hidden'}}><div className="tbl-wrap"><table>
+      <thead><tr><th>Date</th><th>Company</th><th>Amount</th><th>Status</th><th>Payment</th><th>Update</th></tr></thead>
+      <tbody>{orders.map(o=><tr key={o.id}>
+        <td>{fmtDate(o.order_date)}</td><td style={{fontWeight:500}}>{getComp(o.company_id)}</td><td style={{fontWeight:600}}>{fmtMoney(o.total_amount)}</td>
+        <td><span className={`tag ${stColors[o.status]||'tag-blue'}`}>{o.status}</span></td>
+        <td><span className={`tag ${o.payment_status==='paid'?'tag-green':'tag-yellow'}`}>{o.payment_status}</span></td>
+        <td><select value={o.status} onChange={e=>updateStatus(o.id,e.target.value)} style={{padding:'4px 6px',fontSize:11,borderRadius:6,border:'1px solid var(--border)'}}>
+          <option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="in_production">In Production</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option>
+        </select></td>
+      </tr>)}{orders.length===0&&<tr><td colSpan="6"><div className="empty"><i className="fas fa-truck"/><h4>No orders yet</h4></div></td></tr>}</tbody>
+    </table></div></div>
+
+    {showForm&&<Modal title="New Order" onClose={()=>setShowForm(false)} wide footer={<><button className="btn btn-outline" onClick={()=>setShowForm(false)}>Cancel</button><button className="btn btn-panic" onClick={saveOrder}>Create</button></>}>
+      <div className="fr"><div className="fg"><label>Company *</label><select value={form.company_id} onChange={e=>setForm(f=>({...f,company_id:e.target.value}))}><option value="">Select...</option>{companies.map(c=><option key={c.id} value={c.id}>{c.company_name}</option>)}</select></div><div className="fg"><label>Order Date</label><input type="date" value={form.order_date} onChange={e=>setForm(f=>({...f,order_date:e.target.value}))}/></div></div>
+      <h4 style={{margin:'8px 0'}}>Items</h4>
+      {form.items.map((it,i)=><div key={i} className="fr3" style={{alignItems:'end'}}><div className="fg"><label>Product</label><select value={it.product} onChange={e=>updateItem(i,'product',e.target.value)}><option value="">Select...</option>{products.map(p=><option key={p.id} value={p.name}>{p.name} ({fmtMoney(p.unit_price)})</option>)}</select></div><div className="fg"><label>Qty</label><input type="number" min="1" value={it.qty} onChange={e=>updateItem(i,'qty',parseInt(e.target.value)||1)}/></div><div className="fg"><label>Price</label><input type="number" step="0.01" value={it.price} onChange={e=>updateItem(i,'price',parseFloat(e.target.value)||0)}/></div></div>)}
+      <button className="btn btn-outline btn-sm" onClick={addItem} style={{marginBottom:12}}><i className="fas fa-plus"/> Add Item</button>
+      <div className="fr"><div className="fg"><label>Total</label><input value={fmtMoney(form.total_amount)} readOnly style={{fontWeight:700,fontSize:18}}/></div><div className="fg"><label>Delivery Date</label><input type="date" value={form.delivery_date} onChange={e=>setForm(f=>({...f,delivery_date:e.target.value}))}/></div></div>
+      <div className="fg"><label>Notes</label><textarea rows="2" value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))}/></div>
+    </Modal>}
+  </div>;
+}
+
+// ====== PROMOTIONS ======
+function Promotions({data, setData}) {
+  const [filter, setFilter] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const empty = {business:'thekretan',name:'',type:'email',subject:'',content:'',target_segment:'all',status:'draft',scheduled_date:''};
+  const [form, setForm] = useState(empty);
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+
+  const promos = data.promotions.filter(p=>!filter||p.business===filter).sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
+
+  const save = ()=>{
+    if(!form.name||!form.content){toast('Name and content required',false);return;}
+    setData(d=>({...d, promotions:[...d.promotions,{...form,id:d.next_id,recipients_count:0,created_at:now()}], next_id:d.next_id+1}));
+    toast('Promotion created');
+    setShowForm(false);
+  };
+
+  const markSent = id=>{
+    setData(d=>{
+      const p = d.promotions.find(x=>x.id===id);
+      let count = 0;
+      if(p.business==='thekretan') count = d.kretan_customers.filter(c=>c.active!==false&&(p.type==='email'?c.consent_email&&c.email:c.consent_sms&&c.mobile)).length;
+      else count = d.panic_companies.filter(c=>c.active!==false&&(p.type==='email'?c.consent_email&&c.email:c.consent_sms&&c.mobile)).length;
+      return {...d, promotions:d.promotions.map(x=>x.id===id?{...x,status:'sent',sent_date:now(),recipients_count:count}:x)};
+    });
+    toast('Marked as sent');
+  };
+
+  const del = id=>{
+    if(!confirm('Delete?'))return;
+    setData(d=>({...d,promotions:d.promotions.filter(p=>p.id!==id)}));
+    toast('Deleted');
+  };
+
+  return <div className="content">
+    <div className="sec-title"><h2><i className="fas fa-bullhorn"/> Promotions</h2><button className="btn btn-primary" onClick={()=>{setForm(empty);setShowForm(true);}}><i className="fas fa-plus"/> New</button></div>
+    <div className="tabs"><div className={`tab ${filter===''?'active':''}`} onClick={()=>setFilter('')}>All</div><div className={`tab ${filter==='thekretan'?'active':''}`} onClick={()=>setFilter('thekretan')}>The Kretan</div><div className={`tab ${filter==='panicsweets'?'active':''}`} onClick={()=>setFilter('panicsweets')}>Panic Sweets</div></div>
+    <div className="card" style={{padding:0,overflow:'hidden'}}><div className="tbl-wrap"><table>
+      <thead><tr><th>Business</th><th>Name</th><th>Type</th><th>Segment</th><th>Status</th><th>Recipients</th><th>Actions</th></tr></thead>
+      <tbody>{promos.map(p=><tr key={p.id}>
+        <td><span className={`tag ${p.business==='thekretan'?'tag-yellow':'tag-pink'}`}>{p.business==='thekretan'?'The Kretan':'Panic Sweets'}</span></td>
+        <td style={{fontWeight:500}}>{p.name}</td><td><i className={`fas fa-${p.type==='email'?'envelope':'sms'}`}/> {p.type}</td><td>{p.target_segment}</td>
+        <td><span className={`tag ${p.status==='sent'?'tag-green':p.status==='draft'?'tag-blue':'tag-yellow'}`}>{p.status}</span></td><td>{p.recipients_count||'-'}</td>
+        <td><div className="btn-group">{p.status==='draft'&&<button className="btn btn-success btn-sm" onClick={()=>markSent(p.id)} title="Send"><i className="fas fa-paper-plane"/></button>}<button className="btn btn-outline btn-sm" onClick={()=>del(p.id)}><i className="fas fa-trash"/></button></div></td>
+      </tr>)}{promos.length===0&&<tr><td colSpan="7"><div className="empty"><i className="fas fa-bullhorn"/><h4>No promotions</h4></div></td></tr>}</tbody>
+    </table></div></div>
+
+    {showForm&&<Modal title="New Promotion" onClose={()=>setShowForm(false)} wide footer={<><button className="btn btn-outline" onClick={()=>setShowForm(false)}>Cancel</button><button className="btn btn-primary" onClick={save}>Create</button></>}>
+      <div className="fr"><div className="fg"><label>Business *</label><select value={form.business} onChange={e=>set('business',e.target.value)}><option value="thekretan">The Kretan</option><option value="panicsweets">Panic Sweets</option></select></div><div className="fg"><label>Type *</label><select value={form.type} onChange={e=>set('type',e.target.value)}><option value="email">Email</option><option value="sms">SMS</option></select></div></div>
+      <div className="fg"><label>Campaign Name *</label><input value={form.name} onChange={e=>set('name',e.target.value)} placeholder="e.g. Summer Promo 2026"/></div>
+      {form.type==='email'&&<div className="fg"><label>Subject</label><input value={form.subject} onChange={e=>set('subject',e.target.value)}/></div>}
+      <div className="fg"><label>Content *</label><textarea rows="5" value={form.content} onChange={e=>set('content',e.target.value)} placeholder="Write your message..."/></div>
+      <div className="fr"><div className="fg"><label>Target</label><select value={form.target_segment} onChange={e=>set('target_segment',e.target.value)}><option value="all">All</option><option value="high_value">High Value</option><option value="inactive">Inactive</option></select></div><div className="fg"><label>Scheduled</label><input type="date" value={form.scheduled_date} onChange={e=>set('scheduled_date',e.target.value)}/></div></div>
+    </Modal>}
+  </div>;
+}
+
+// ====== REWARDS SETTINGS ======
+function RewardsSettings({data, setData}) {
+  const [s, setS] = useState(data.rewards_settings);
+  const save = ()=>{ setData(d=>({...d,rewards_settings:s})); toast('Settings saved'); };
+
+  return <div className="content">
+    <h2 style={{marginBottom:20}}><i className="fas fa-cog" style={{marginRight:8}}/> Rewards Settings</h2>
+    <div className="card card-body" style={{maxWidth:550}}>
+      <div className="fg"><label>Points per Euro spent</label><input type="number" step="0.1" value={s.points_per_euro} onChange={e=>setS(x=>({...x,points_per_euro:parseFloat(e.target.value)||0}))}/><small style={{color:'var(--text-light)'}}>Customer earns this many points per &euro;1</small></div>
+      <div className="fg"><label>Redemption rate (&euro; per point)</label><input type="number" step="0.001" value={s.redemption_rate} onChange={e=>setS(x=>({...x,redemption_rate:parseFloat(e.target.value)||0}))}/><small style={{color:'var(--text-light)'}}>Value of each point when redeemed</small></div>
+      <div className="fg"><label>Welcome bonus (points)</label><input type="number" value={s.welcome_bonus} onChange={e=>setS(x=>({...x,welcome_bonus:parseInt(e.target.value)||0}))}/></div>
+      <div className="fg"><label>Birthday bonus (points)</label><input type="number" value={s.birthday_bonus} onChange={e=>setS(x=>({...x,birthday_bonus:parseInt(e.target.value)||0}))}/></div>
+      <div className="fg"><label>Min points to redeem</label><input type="number" value={s.min_redeem_points} onChange={e=>setS(x=>({...x,min_redeem_points:parseInt(e.target.value)||0}))}/></div>
+      <button className="btn btn-primary" onClick={save}><i className="fas fa-save"/> Save Settings</button>
+    </div>
+  </div>;
+}
+
+// ====== EXPORT / BACKUP ======
+function DataManagement({data, setData}) {
+  const exportData = ()=>{
+    const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+    const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download=`crm-backup-${today()}.json`; a.click();
+    toast('Backup downloaded');
+  };
+  const importData = ()=>{
+    const input = document.createElement('input'); input.type='file'; input.accept='.json';
+    input.onchange = e=>{
+      const file = e.target.files[0]; if(!file)return;
+      const reader = new FileReader();
+      reader.onload = ev=>{ try { const d=JSON.parse(ev.target.result); setData(d); toast('Data restored'); } catch(e){ toast('Invalid file',false); } };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+  const resetData = ()=>{
+    if(!confirm('This will DELETE all data. Are you sure?'))return;
+    if(!confirm('REALLY delete everything?'))return;
+    setData(getDefaultData()); toast('All data reset');
+  };
+
+  const exportCSV = (type)=>{
+    let rows, filename;
+    if(type==='customers'){
+      rows = data.kretan_customers.map(c=>[c.first_name,c.last_name,c.email,c.mobile||c.phone,c.loyalty_points,c.total_spent].join(','));
+      rows.unshift('First Name,Last Name,Email,Phone,Points,Total Spent');
+      filename = 'kretan-customers.csv';
+    } else {
+      rows = data.panic_companies.map(c=>[c.company_name,c.contact_person,c.email,c.phone,c.total_orders,c.total_revenue].join(','));
+      rows.unshift('Company,Contact,Email,Phone,Orders,Revenue');
+      filename = 'panic-companies.csv';
+    }
+    const blob = new Blob([rows.join('\n')], {type:'text/csv'});
+    const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click();
+    toast('CSV exported');
+  };
+
+  return <div className="content">
+    <h2 style={{marginBottom:20}}><i className="fas fa-database" style={{marginRight:8}}/> Data Management</h2>
+    <div className="stats" style={{gridTemplateColumns:'1fr 1fr'}}>
+      <div className="card card-body">
+        <h3 style={{marginBottom:12}}>Backup & Restore</h3>
+        <p style={{fontSize:13,color:'var(--text-light)',marginBottom:14}}>Download a backup of all your CRM data or restore from a previous backup.</p>
+        <div className="btn-group"><button className="btn btn-primary" onClick={exportData}><i className="fas fa-download"/> Download Backup</button><button className="btn btn-outline" onClick={importData}><i className="fas fa-upload"/> Restore Backup</button></div>
+      </div>
+      <div className="card card-body">
+        <h3 style={{marginBottom:12}}>Export CSV</h3>
+        <p style={{fontSize:13,color:'var(--text-light)',marginBottom:14}}>Export contact lists as CSV for use in Mailchimp, Brevo, or other platforms.</p>
+        <div className="btn-group"><button className="btn btn-kretan" onClick={()=>exportCSV('customers')}><i className="fas fa-users"/> Kretan Customers</button><button className="btn btn-panic" onClick={()=>exportCSV('companies')}><i className="fas fa-building"/> Panic Companies</button></div>
+      </div>
+    </div>
+    <div className="card card-body" style={{marginTop:16,borderLeft:'3px solid var(--danger)'}}>
+      <h3 style={{marginBottom:8,color:'var(--danger)'}}>Danger Zone</h3>
+      <p style={{fontSize:13,color:'var(--text-light)',marginBottom:12}}>Permanently delete all data and start fresh.</p>
+      <button className="btn btn-danger" onClick={resetData}><i className="fas fa-exclamation-triangle"/> Reset All Data</button>
+    </div>
+  </div>;
+}
+
+// ====== MAIN APP ======
+function App() {
+  const {data, setData, nextId} = useStore();
+  const [page, setPage] = useState('dashboard');
+
+  const pages = {
+    dashboard: ()=><Dashboard data={data}/>,
+    kretan_customers: ()=><KretanCustomers data={data} setData={setData} nextId={nextId}/>,
+    kretan_purchases: ()=><KretanPurchases data={data} setData={setData}/>,
+    panic_companies: ()=><PanicCompanies data={data} setData={setData}/>,
+    panic_products: ()=><PanicProducts data={data} setData={setData}/>,
+    panic_orders: ()=><PanicOrders data={data} setData={setData}/>,
+    promotions: ()=><Promotions data={data} setData={setData}/>,
+    rewards_settings: ()=><RewardsSettings data={data} setData={setData}/>,
+    data_mgmt: ()=><DataManagement data={data} setData={setData}/>,
+  };
+
+  const nav = (pg)=>setPage(pg);
+  const breadcrumbs = {dashboard:'Dashboard',kretan_customers:'The Kretan > Customers',kretan_purchases:'The Kretan > Purchases',panic_companies:'Panic Sweets > Companies',panic_products:'Panic Sweets > Products',panic_orders:'Panic Sweets > Orders',promotions:'Marketing > Promotions',rewards_settings:'Settings > Rewards',data_mgmt:'Settings > Data'};
+
+  return <>
+    <ToastContainer/>
+    <div className="app">
+      <div className="sidebar">
+        <div className="sidebar-hdr"><h2>CRM System</h2><small>The Kretan & Panic Sweets</small></div>
+        <div className="nav-sec">
+          <div className={`nav-item ${page==='dashboard'?'active':''}`} onClick={()=>nav('dashboard')}><i className="fas fa-chart-pie"/> Dashboard</div>
+        </div>
+        <div className="nav-sec">
+          <div className="nav-sec-title">The Kretan</div>
+          <div className={`nav-item ${page==='kretan_customers'?'active':''}`} onClick={()=>nav('kretan_customers')}><i className="fas fa-users"/> Customers {data.kretan_customers.length>0&&<span className="nav-badge">{data.kretan_customers.length}</span>}</div>
+          <div className={`nav-item ${page==='kretan_purchases'?'active':''}`} onClick={()=>nav('kretan_purchases')}><i className="fas fa-shopping-cart"/> Purchases</div>
+        </div>
+        <div className="nav-sec">
+          <div className="nav-sec-title">Panic Sweets</div>
+          <div className={`nav-item ${page==='panic_companies'?'active':''}`} onClick={()=>nav('panic_companies')}><i className="fas fa-building"/> Companies {data.panic_companies.length>0&&<span className="nav-badge">{data.panic_companies.length}</span>}</div>
+          <div className={`nav-item ${page==='panic_products'?'active':''}`} onClick={()=>nav('panic_products')}><i className="fas fa-box"/> Products</div>
+          <div className={`nav-item ${page==='panic_orders'?'active':''}`} onClick={()=>nav('panic_orders')}><i className="fas fa-truck"/> Orders</div>
+        </div>
+        <div className="nav-sec">
+          <div className="nav-sec-title">Marketing</div>
+          <div className={`nav-item ${page==='promotions'?'active':''}`} onClick={()=>nav('promotions')}><i className="fas fa-bullhorn"/> Promotions</div>
+        </div>
+        <div className="nav-sec">
+          <div className="nav-sec-title">Settings</div>
+          <div className={`nav-item ${page==='rewards_settings'?'active':''}`} onClick={()=>nav('rewards_settings')}><i className="fas fa-star"/> Rewards</div>
+          <div className={`nav-item ${page==='data_mgmt'?'active':''}`} onClick={()=>nav('data_mgmt')}><i className="fas fa-database"/> Data & Backup</div>
+        </div>
+      </div>
+      <div className="main">
+        <div className="topbar">
+          <div className="breadcrumb">{breadcrumbs[page]||'Dashboard'}</div>
+          <div style={{fontSize:12,color:'var(--text-light)'}}><i className="fas fa-circle" style={{color:'var(--success)',fontSize:8,marginRight:6}}/>Data saved locally</div>
+        </div>
+        {(pages[page]||pages.dashboard)()}
+      </div>
+    </div>
+  </>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

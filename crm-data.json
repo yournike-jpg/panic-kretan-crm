@@ -1,0 +1,31 @@
+{
+  "users": [
+    {
+      "username": "admin",
+      "password_hash": "0022cdbdb5b9495f4cbc4b5950a14fa9:fcaa54f16756b8b248d0701d196cfd9737b5f4ff4a406c61d014677365fe530248e2e10688149efdacb48182cc00b52ad2692b5498fd8c25c1d83922909b35b0",
+      "full_name": "Administrator",
+      "role": "admin",
+      "business": "both",
+      "active": 1,
+      "created_at": "2026-03-24T18:32:54.694Z",
+      "id": 1000
+    }
+  ],
+  "contacts": [],
+  "kretan_purchases": [],
+  "kretan_rewards": [],
+  "kretan_communications": [],
+  "panic_products": [],
+  "panic_packages": [],
+  "panic_orders": [],
+  "promotions": [],
+  "rewards_settings": {
+    "id": 1,
+    "points_per_euro": 1,
+    "redemption_rate": 0.01,
+    "welcome_bonus": 50,
+    "birthday_bonus": 100,
+    "min_redeem_points": 100
+  },
+  "_next_id": 1001
+}
