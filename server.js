@@ -13,8 +13,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 initializeDatabase();
 
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/contacts', require('./routes/contacts'));
+app.use('/api/kretan/customers', require('./routes/kretan-customers'));
 app.use('/api/kretan/purchases', require('./routes/kretan-purchases'));
+app.use('/api/panic/companies', require('./routes/panic-companies'));
 app.use('/api/panic/products', require('./routes/panic-products'));
 app.use('/api/panic/packages', require('./routes/panic-packages'));
 app.use('/api/panic/orders', require('./routes/panic-orders'));

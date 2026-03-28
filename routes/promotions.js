@@ -36,14 +36,12 @@ router.post('/:id/send', (req, res) => {
   if(!p) return res.status(404).json({error:'Not found.'});
   let count=0;
   if(p.business==='thekretan') {
-    count=db.where('contacts',c=>
-      (c.business==='thekretan'||c.business==='both')&&
+    count=db.where('kretan_customers',c=>
       c.active!==false&&c.active!==0&&
       (p.type==='email'?(c.consent_email&&c.email):(c.consent_sms&&c.mobile))
     ).length;
   } else if(p.business==='panicsweets') {
-    count=db.where('contacts',c=>
-      (c.business==='panicsweets'||c.business==='both')&&
+    count=db.where('panic_companies',c=>
       c.active!==false&&c.active!==0&&
       (p.type==='email'?(c.consent_email&&c.email):(c.consent_sms&&c.mobile))
     ).length;

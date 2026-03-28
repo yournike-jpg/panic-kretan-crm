@@ -14,8 +14,8 @@ function loadData() {
     }
   } catch (e) { console.error('Error loading data:', e.message); }
   _data = {
-    users: [], contacts: [], kretan_purchases: [], kretan_rewards: [], kretan_communications: [],
-    panic_products: [], panic_packages: [], panic_orders: [],
+    users: [], kretan_customers: [], kretan_purchases: [], kretan_rewards: [],
+    panic_companies: [], panic_products: [], panic_packages: [], panic_orders: [],
     promotions: [],
     rewards_settings: { id:1, points_per_euro:1, redemption_rate:0.01, welcome_bonus:50, birthday_bonus:100, min_redeem_points:100 },
     _next_id: 1000
@@ -50,7 +50,7 @@ function initializeDatabase() {
     db.insert('users', { username:'admin', password_hash: hashPassword('admin123'), full_name:'Administrator', role:'admin', business:'both', active:1, created_at: new Date().toISOString() });
     console.log('Default admin created: admin / admin123');
   }
-  console.log(`Database: ${data.users.length} users, ${data.contacts.length} contacts`);
+  console.log(`Database: ${data.users.length} users, ${data.kretan_customers.length} customers, ${data.panic_companies.length} companies`);
 }
 
 module.exports = { db, initializeDatabase };
